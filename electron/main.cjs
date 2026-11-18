@@ -86,6 +86,28 @@ const DIR_MODELS_BUNDLED = app.isPackaged ? path.join(process.resourcesPath, 'mo
  * 见 docs/release.md 三）。所以打包版里这个文件不存在，`import:start` 必须提前拦掉——
  * 以前直接 spawn，用户看到的是 `ENOTDIR, not a directory`（2026-11-18 在打包版实测到）。
  */
+/**
+ * 「做曲包」组件（creator pack）的目录。
+ *
+ * 安装包不带 Python 工具链（Python 35 MB + 依赖 187 MB + 分离模型 28 MB），
+ * 而是让用户按需下载一个 zip 解压到这里：
+ *
+ *     <userData>/creator/{python,pylibs,tools,models}
+ *
+ * 目录不存在就只是「不能做曲包」，其它功能完全不受影响。
+ * `PET_CREATOR_DIR` 可以覆盖（便携版/开发测试用）。
+ */
+const DIR_CREATOR = (() => {
+  const override = process.env.PET_CREATOR_DIR
+  if (override) return path.resolve(override)
+  if (!app.isPackaged) return path.join(ROOT, 'creator')
+  try {
+    return path.join(app.getPath('userData'), 'creator')
+  } catch {
+    return path.join(ROOT, 'creator')
+  }
+})()
+
 const PIPELINE_SCRIPT = path.join(ROOT, 'tools', 'pipeline.py')
 const DIR_SHOTS = path.join(ROOT, 'shots')
 
@@ -115,7 +137,14 @@ const DIR_SONGPACKS = (() => {
 const CONFIG_PATH = path.join(DIR_DATA, 'config.json')
 const LOG_PATH = path.join(DIR_DATA, 'main.log')
 
-pipeline.init({ root: ROOT, songpacks: DIR_SONGPACKS, pythonPath: readConfig().pythonPath })
+pipeline.init({
+  root: ROOT,
+  songpacks: DIR_SONGPACKS,
+  pythonPath: readConfig().pythonPath,
+  creatorDir: DIR_CREATOR,
+  // 打包后 ROOT 在 asar 里是只读的，流水线日志要写进 userData
+  dataDir: DIR_DATA,
+})
 // 菜单语言：环境变量 PET_LANG > 存档 lang > 系统语言（渲染层用同一套优先级，见 src/i18n）
 let menuLang = setLang(pickLang({ saved: readConfig().lang, system: app.getLocale() }))
 
@@ -835,6 +864,7 @@ function showContextMenu() {
     { label: m('saySong'), click: () => win?.webContents.send('cmd', 'say-song') },
     { label: m('mic'), click: () => win?.webContents.send('cmd', 'mic') },
     { label: m('import'), click: () => win?.webContents.send('cmd', 'import') },
+    { label: m('creator'), click: () => void showCreatorInfo() },
     {
       // 语言：菜单文案是启动时定的，这里切换后要**重建菜单**才看得到变化；
       // 渲染层的界面会立刻变（走 `cmd lang:xx`）。
@@ -1267,13 +1297,15 @@ ipcMain.handle('import:fetch-lyrics', async (_event, song) => {
 })
 
 ipcMain.handle('import:start', (_event, options) => {
-  // 打包版没有 tools/：给一句人话，别把 ENOTDIR 抛给渲染进程
-  if (!fs.existsSync(PIPELINE_SCRIPT)) {
-    logToFile('[import] 拒绝启动：没有 tools/pipeline.py（这个版本不带导入组件）')
+  // 没有 Python 工具链（安装包默认不带，要靠可选的 creator pack）：给一句人话，
+  // 别把 ENOTDIR 抛给渲染进程（2026-11-18 在打包版实测到过）
+  if (!pipeline.canImport()) {
+    logToFile('[import] 拒绝启动：没有可用的 Python 工具链（creator pack 没装）')
     return {
       ok: false,
       error:
-        '这个版本不含「导入歌曲」组件：安装包只带播放 / 跟唱 / 和声。要做曲包请用开发版（见使用说明第 7 节）。',
+        '还没装「做曲包」组件：到 Releases 下载 ai-companion-singer-creator-pack.zip，解压到 ' +
+        `${DIR_CREATOR}（右键菜单「打开组件目录」可以直接打开这个文件夹）。`,
     }
   }
   const result = pipeline.start(options || {})
@@ -1291,9 +1323,51 @@ ipcMain.handle('import:status', () => ({
   busy: pipeline.busy(),
   python: pipeline.pythonInfo(ROOT),
   current: pipeline.currentJob(),
-  // 渲染层据此把「导入」入口降级成一句说明（打包版永远是 false）
-  available: fs.existsSync(PIPELINE_SCRIPT),
+  // 渲染层据此决定「导入」入口是可用还是一句说明
+  available: pipeline.canImport(),
+  creatorDir: DIR_CREATOR,
 }))
+/**
+ * 「做曲包」组件说明：装了就直接打开目录，没装就告诉用户去哪下、放哪。
+ * 挂在右键菜单里（不需要渲染层配合）。
+ */
+async function showCreatorInfo() {
+  fs.mkdirSync(DIR_CREATOR, { recursive: true })
+  if (pipeline.canImport()) {
+    void shell.openPath(DIR_CREATOR)
+    return
+  }
+  const { response } = await dialog.showMessageBox(win ?? undefined, {
+    type: 'info',
+    title: '做曲包组件',
+    message: '这个功能需要一个可选组件（解压后约 250 MB）',
+    detail:
+      '安装包本身只带播放 / 跟唱 / 和声；做曲包要的人声分离、参考音高、逐字口型都在一个可选的包里。\n\n' +
+      `1) 到 GitHub Releases 下载 ai-companion-singer-creator-pack.zip\n` +
+      `2) 解压到：${DIR_CREATOR}（点下面的「打开组件目录」）\n` +
+      `3) 回到这里再试一次「导入歌曲」\n\n` +
+      '解压后目录里应该直接是 python/、pylibs/、tools/、models/ 四个文件夹。',
+    buttons: ['打开组件目录', '关闭'],
+    defaultId: 1,
+    cancelId: 1,
+    noLink: true,
+  })
+  if (response === 0) void shell.openPath(DIR_CREATOR)
+}
+
+/** 打开 creator pack 目录：没装组件时就是让用户把解压出来的东西放进去 */
+ipcMain.handle('creator:open', () => {
+  try {
+    fs.mkdirSync(DIR_CREATOR, { recursive: true })
+    void shell.openPath(DIR_CREATOR)
+    return { ok: true, dir: DIR_CREATOR }
+  } catch (err) {
+    return { ok: false, error: String(err) }
+  }
+})
+
+/** 渲染层按 I / 点「导入」时，没有组件就走这条：弹原生说明框 */
+ipcMain.handle('creator:info', () => void showCreatorInfo())
 ipcMain.handle('import:index', (_event, packId) => pipeline.addToIndex(packId))
 
 // B4/B8 删除曲包：目录 + index.json 一起清。真正的防护在 pipeline.removePack 里。

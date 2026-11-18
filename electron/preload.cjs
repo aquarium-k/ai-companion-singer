@@ -23,6 +23,9 @@ contextBridge.exposeInMainWorld('pet', {
   cancelImport: () => ipcRenderer.invoke('import:cancel'),
   importStatus: () => ipcRenderer.invoke('import:status'),
   addToIndex: (packId) => ipcRenderer.invoke('import:index', packId),
+  /** 做曲包组件（creator pack）：说明框 / 打开组件目录 */
+  creatorInfo: () => ipcRenderer.invoke('creator:info'),
+  openCreatorDir: () => ipcRenderer.invoke('creator:open'),
   deletePack: (packId) => ipcRenderer.invoke('packs:delete', packId),
   renamePack: (packId, title) => ipcRenderer.invoke('packs:rename', packId, title),
 

@@ -22,7 +22,7 @@
   "ui.packs.title": "Choose a song",
   "ui.packs.hint": "Esc to close",
   "ui.packs.empty": "No song packs yet. Press I to import one, or drop an audio file here.",
-  "ui.packs.emptyNoImport": "No song packs yet. This build has no importer — put song packs into the songpacks folder (see the manual).",
+  "ui.packs.emptyNoImport": "No song packs yet. To import, install the Creator pack from the right-click menu (Creator pack…, about 250 MB).",
   "ui.packs.del": "Delete",
   "ui.packs.rename": "Rename",
   "ui.import.title": "Import",

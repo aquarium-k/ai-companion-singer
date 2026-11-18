@@ -14,7 +14,7 @@ const { spawn, execFileSync } = require('node:child_process')
 const path = require('node:path')
 const fs = require('node:fs')
 
-let ctx = null // { root, songpacks, pythonPath }
+let ctx = null // { root, songpacks, pythonPath, creatorDir }
 let child = null
 let childLog = null
 let current = null // { packId, audioPath }
@@ -26,14 +26,56 @@ const CASE_INSENSITIVE = process.platform === 'win32'
 
 function init(context) {
   ctx = context
+  pythonCache = undefined
+}
+
+/**
+ * 「做曲包」组件的路径（creator pack）。
+ *
+ * 安装包**不带** Python 工具链（Python 35 MB + 依赖 187 MB + 分离模型 28 MB），
+ * 所以打包版把这一套放在一个可选的目录里，用户按需下载解压：
+ *
+ *     <userData>/creator/python/python.exe
+ *     <userData>/creator/pylibs/<numpy、av、onnxruntime…>
+ *     <userData>/creator/tools/pipeline.py
+ *     <userData>/creator/models/UVR_MDXNET_3_9662.onnx
+ *
+ * 开发版仍然用仓库自带的 `tools/` + `.pylibs`（`app.isPackaged` 分支在 main.cjs），
+ * 所以这里的 creatorDir 在开发版通常不存在，canImport() 会退回去看仓库。
+ */
+function creatorPaths() {
+  const dir = ctx?.creatorDir
+  if (!dir) return null
+  return {
+    dir,
+    python: path.join(dir, 'python', process.platform === 'win32' ? 'python.exe' : 'bin/python3'),
+    tools: path.join(dir, 'tools', 'pipeline.py'),
+    pylibs: path.join(dir, 'pylibs'),
+    model: path.join(dir, 'models', 'UVR_MDXNET_3_9662.onnx'),
+  }
+}
+
+/** 这个安装能不能做曲包：creator pack 在，或者开发版里有仓库自带的 tools/ */
+function canImport() {
+  const c = creatorPaths()
+  if (c && fs.existsSync(c.python) && fs.existsSync(c.tools)) return true
+  return Boolean(ctx && fs.existsSync(path.join(ctx.root, 'tools', 'pipeline.py')))
+}
+
+/** 用的是不是 creator pack（决定 cwd、PYTHONPATH、--model 怎么给） */
+function usingCreator() {
+  const c = creatorPaths()
+  return Boolean(c && fs.existsSync(c.python) && fs.existsSync(c.tools))
 }
 
 function pipelineEnv(root) {
+  const c = usingCreator() ? creatorPaths() : null
   return {
     ...process.env,
     // 和 tools/pipeline.py 里的 ENV_DEFAULTS 保持一致；
-    // 两边都设是为了直接从命令行跑时也能工作
-    PYTHONPATH: path.join(root, '.pylibs'),
+    // 两边都设是为了直接从命令行跑时也能工作。
+    // creator pack 的依赖在它自己的 pylibs 里（安装包不带 .pylibs）
+    PYTHONPATH: c ? c.pylibs : path.join(root, '.pylibs'),
     HF_HOME: path.join(root, '.cache', 'huggingface'),
     HF_ENDPOINT: process.env.HF_ENDPOINT ?? 'https://hf-mirror.com',
     PYTHONIOENCODING: 'utf-8',
@@ -45,11 +87,14 @@ function pipelineEnv(root) {
 /**
  * 找 Python。打包后的机器上不一定有 PATH 里的 python，
  * 而且 Windows 商店版 `python` 是个空壳（装没装都返回一个会失败的 alias），
- * 所以按「显式配置 → 仓库内 venv → PATH → py 启动器」的顺序逐个试，找到就缓存。
+ * 所以按「creator pack → 显式配置 → 仓库内 venv → PATH → py 启动器」的顺序逐个试，找到就缓存。
  */
 function findPython(root) {
   if (pythonCache !== undefined) return pythonCache
+  const c = creatorPaths()
   const candidates = [
+    // creator pack 自带解释器：用户装了组件就不用再装 Python
+    { cmd: c?.python, args: ['--version'] },
     { cmd: ctx?.pythonPath, args: ['--version'] },
     { cmd: process.env.PET_PYTHON, args: ['--version'] },
     { cmd: path.join(root, '.venv', 'Scripts', 'python.exe'), args: ['--version'] },
@@ -334,19 +379,23 @@ function start({ audioPath, lyricsPath, title, bpm, fromStage, only }) {
   const packDir = path.join(ctx.songpacks, packId)
   fs.mkdirSync(packDir, { recursive: true })
 
+  const creator = usingCreator() ? creatorPaths() : null
   const args = [
     '-u', // 日志实时落盘：不缓冲的话跑几分钟 data/pipeline-*.log 一直是 0 字节
-    path.join(ctx.root, 'tools', 'pipeline.py'),
+    creator ? creator.tools : path.join(ctx.root, 'tools', 'pipeline.py'),
     '--pack-dir', packDir,
     '--audio', audioPath,
     '--title', name,
   ]
+  // creator pack 的分离模型在它自己的 models/ 下（pipeline.py 的默认值是 ROOT/.cache/models）
+  if (creator && fs.existsSync(creator.model)) args.push('--model', creator.model)
   if (lyricsPath) args.push('--lyrics-src', lyricsPath)
   if (bpm) args.push('--bpm', String(bpm))
   if (only) args.push('--only', only)
   else if (fromStage) args.push('--from', fromStage)
 
-  childLog = path.join(ctx.root, 'data', `pipeline-${packId}.log`)
+  // 日志写进可写的数据目录：打包后 `ctx.root` 是 app.asar（只读），不能往里写
+  childLog = path.join(ctx.dataDir ?? path.join(ctx.root, 'data'), `pipeline-${packId}.log`)
   fs.mkdirSync(path.dirname(childLog), { recursive: true })
   // 直接把子进程的 stdout/stderr 接到文件描述符上，不经过管道：
   // 一是主进程不用搬运几十 KB 的日志，二是沙箱/受限环境里 pipe 会 EPERM。
@@ -384,7 +433,9 @@ function start({ audioPath, lyricsPath, title, bpm, fromStage, only }) {
 
   try {
     child = spawn(python.cmd, [...python.prefix, ...args], {
-      cwd: ctx.root,
+      // 打包后 ctx.root 是 app.asar（**文件**，不是目录），拿它当 cwd 会 ENOENT。
+      // 用 creator pack 的时候以它自己的目录为工作目录。
+      cwd: creator ? creator.dir : ctx.root,
       env: pipelineEnv(ctx.root),
       windowsHide: true,
       stdio: ['ignore', fd, fd],
@@ -475,5 +526,9 @@ module.exports = {
   pythonInfo,
   pythonArgv,
   envFor,
+  /** 这个安装能不能「做曲包」（creator pack 在，或开发版有仓库自带 tools/） */
+  canImport,
+  /** creator pack 的目录（不存在也返回，界面上要提示用户放哪） */
+  creatorDir: () => creatorPaths()?.dir ?? null,
   AUDIO_EXTS,
 }

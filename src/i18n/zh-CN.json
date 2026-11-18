@@ -22,7 +22,7 @@
   "ui.packs.title": "选择曲目",
   "ui.packs.hint": "Esc 关闭",
   "ui.packs.empty": "还没有曲包。按 I 导入一首，或把音频拖进来。",
-  "ui.packs.emptyNoImport": "还没有曲包。这个版本不含导入组件，曲包要放到 songpacks 目录（做法见使用说明）。",
+  "ui.packs.emptyNoImport": "还没有曲包。要用导入功能，先在右键菜单里点「做曲包组件…」装组件（约 250 MB）。",
   "ui.packs.del": "删除",
   "ui.packs.rename": "改名",
   "ui.import.title": "导入",

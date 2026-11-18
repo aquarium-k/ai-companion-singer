@@ -1,6 +1,6 @@
 {
   "name": "ai-companion-singer",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "description": "AI 伴唱桌宠 - 初步工程 (P0)",

@@ -47,10 +47,16 @@ declare global {
         busy: boolean
         python: string | null
         current: { packId: string; audioPath: string; title: string; job: ImportJob | null } | null
-        /** 这个版本能不能导入（打包版不带 `tools/`，永远 false） */
+        /** 这个版本能不能导入（打包版要看有没有装 creator pack） */
         available: boolean
+        /** 做曲包组件该放哪（没有组件时提示用户用） */
+        creatorDir: string
       }>
       addToIndex(packId: string): Promise<string[]>
+      /** 做曲包组件：弹原生说明框（装了就直接打开目录） */
+      creatorInfo(): Promise<void>
+      /** 做曲包组件：打开组件目录 */
+      openCreatorDir(): Promise<{ ok: boolean; dir?: string; error?: string }>
       /** 删除曲包（目录 + index.json 登记）；`ok:false` 时 `error` 是要显示的原因 */
       deletePack(packId: string): Promise<{ ok: boolean; packs?: string[]; error?: string }>
       /**

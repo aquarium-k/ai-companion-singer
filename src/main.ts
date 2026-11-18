@@ -2566,9 +2566,9 @@ function handleCommand(cmd: string): void {
         hud.banner('浏览器模式不能导入歌曲，用桌面版', 2200)
         break
       }
-      // 打包版没有导入组件：直接说清楚，别让用户选完文件再撞 ENOTDIR
+      // 没装「做曲包组件」：弹原生说明框（含下载地址和「打开组件目录」按钮）
       if (importAvailable === false) {
-        hud.banner(t('ui.import.unavailable'), 4200)
+        void window.pet.creatorInfo()
         break
       }
       void (async () => {

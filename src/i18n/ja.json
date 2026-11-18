@@ -22,7 +22,7 @@
   "ui.packs.title": "曲を選ぶ",
   "ui.packs.hint": "Esc で閉じる",
   "ui.packs.empty": "曲がまだありません。I で取り込むか、音声をドロップしてください。",
-  "ui.packs.emptyNoImport": "曲がまだありません。この版には取り込み機能がないので、曲パックは songpacks フォルダに置いてください。",
+  "ui.packs.emptyNoImport": "曲がまだありません。取り込みを使うには、右クリックメニューの「曲パック作成の部品…」から部品（約 250 MB）を入れてください。",
   "ui.packs.del": "削除",
   "ui.packs.rename": "名前を変更",
   "ui.import.title": "取り込み",

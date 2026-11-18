@@ -2875,3 +2875,22 @@ SVC 只负责把相位重合成干净的一代。实测（352 用 24 步、384 �
 - **11-18 晚（按 B 路线准备 GitHub 发布）**：用户决定「直接走 B：开发预览，丢 GitHub」。这轮只做**发布物料**，没动功能代码。① **`.gitignore`（此前根本没有）**：直接 `git add .` 会把 5 GB 推上去——`.pylibs` 276 MB、`.svclibs` 1.2 GB、`.tmp` 1.6 GB、`shots` 366 MB、`release` 350 MB、`public/songpacks` 66 MB，还有**带本机音乐路径的 `data/`**（隐私）和 `models/text.vrm`（许可不允许分发）。排查时还发现一个之前没注意的顶层目录 **`checkpoints/`（956 MB，Seed-VC / rmvpe 权重）**。规则写成「按原因分组 + 注释」，能提交的 ≈ **370 个文件 / 21.6 MB**（最大的是 `saki.vrm` 14 MB）。`saki.vrm` 保留提交（VRM 许可允许分发），`text.vrm` 忽略。② **README 重写成「开发预览」**：顶部一张「能做什么 / 还不能做什么」对照表（没有自带曲目、安装包没有导入、没签名），加两张截图（`docs/img/first-open.png`、`docs/img/ui-panels.png`，从 `shots/` 里挑出来放进仓库，因为 `shots/` 被忽略了）；补「版权与授权」段（两个 VRM 的许可差别、和声采样来自商业曲目人声、仅个人学习用）；用「这一版没有做的」「已知问题」替换掉 P0 时代的旧文案；章节重新编号。③ **`docs/release-notes-0.0.1.md`**：可直接贴进 GitHub Releases 的中英双语说明——含 SmartScreen 怎么点过去、`certutil` 核对 SHA256、已知问题、致谢。④ **`docs/release.md` 新增第九节**：`git init` 到 `git push` 的完整命令、**提交前必查清单**（`git status` 里绝不能出现哪些目录）、Release 上传做法（安装包走 Releases 不进 git）。⑤ 环境限制：这台机器**没装 git**（PATH 里没有，也没有 `C:\Program Files\Git`），所以只写了流程、没有真的 init/commit。
 
 - **11-18 晚（真的推上 GitHub 了）**：用户让我直接做。① 环境没 git、没 gh、没有管理员权限，所以下了**便携版**到 `.tmp/tools`（MinGit 2.56.1 + gh 2.105.0，走 GitHub Release 直链）。② `gh auth login` 用设备码登录成 `aquarium-k`（配置目录指到 `.tmp/ghconfig`，避开写不了的 `%APPDATA%`）。③ `git init -b main` → `git add -A`：**372 个文件 / 21.8 MB**，逐个核对过没有 `data/`、`shots/`、`songpacks/`、`checkpoints/`、`text.vrm`；提交后 `gh repo create --public --source=. --push` 建了 <https://github.com/aquarium-k/ai-companion-singer>。④ **卡在网络上**：`github.com` 的 DNS 被污染（解析成 `20.6.7.17` / `192.5.6.30` 这种根 DNS 地址），换成真实 IP 能连但 TLS 只有 **~0.1 KB/s**（8 秒 915 字节），HTTPS push 必然超时。中间还写了个本地 CONNECT 代理（`.tmp/fwd-proxy.mjs`）把目标 IP 换掉——代理本身能用（`curl -x` 拿到 200），但源站太慢，没意义。最后走 **SSH over 443**：`ssh.github.com:443` 解析正常、握手 1.4 秒 → 生成密钥（Windows 自带 `ssh-keygen`，MinGit 没带）→ 用 `gh auth refresh -s admin:public_key` 补权限后 `gh ssh-key add` → `git push` 成功。⑤ 发布：`gh release create v0.0.1` 传安装包 + 校验文件；**GitHub 把中文文件名改成了 `Setup.0.0.1.exe`**，于是删掉重传成 ASCII 名 `ai-companion-singer-0.0.1-setup.exe`，并用它重写了 `SHA256SUMS.txt`；资产 digest 和本地哈希一致（`7b28d970…`）。⑥ 补了 `scripts/push.mjs`（省得每次记 SSH 参数）和 `docs/release.md` 第十节（网络问题、remote、密钥位置、撤销方式）。
+
+- **11-18 晚（v0.0.2：能做曲包了）**：用户说「这个版本还不能做曲包」。原来打包版既没有 `tools/`
+  也没有 `.pylibs`。方案：把做曲包要的东西打成一个**可选 creator pack**，安装包不带。
+  ① 先确认流水线能不能脱离 SVC 跑：只用 `.pylibs`（numpy / av / onnxruntime / Pillow / pykakasi）
+  + UVR MDX-Net 分离模型 + `tools/*.py`，30 秒的样本端到端跑通——关键是**歌词用带时间戳的 LRC**
+  时 `align` 阶段会跳过 ASR，所以组件里可以不带 whisper/ctranslate2（省 60+ MB）。
+  ② 组装：Python 3.12 裁掉 include/libs/tcl/site-packages（148 → 35 MB）、`.pylibs` 排掉
+  whisper/HF 那一套（276 → 187 MB）、模型 28 MB、脚本 1 MB → **250 MB，zip 105 MB**
+  （Windows 自带 `tar -a -c -f x.zip` 直接出 zip）。
+  ③ 应用侧改动：`pipeline.cjs` 加 `creatorPaths()/canImport()`，`findPython` 优先用组件的解释器，
+  `PYTHONPATH` 指向组件 pylibs，`start()` 用组件的 `pipeline.py` + `--model`，**cwd 改成组件目录**
+  （打包后 `ctx.root` 是 `app.asar`，拿它当 cwd 会 ENOENT——第一次测就踩到），日志写到 `DIR_DATA`
+  （同样因为 asar 只读）。`main.cjs` 加 `DIR_CREATOR`、右键菜单「做曲包组件…」、原生 dialog
+  （含下载说明 + 「打开组件目录」）、IPC `creator:open` / `creator:info`；preload / env.d.ts / i18n 同步。
+  ④ 实测：打包版 + 组件 → `importStatus.available = true` → 30 s 的歌导入 `state=done`，
+  产物齐全；把**从 Release 下载的 zip 解压出来**再测一遍，同样 `done`。
+  ⑤ 发布 v0.0.2（安装包 + creator pack + SHA256SUMS），版本号 0.0.2。文档同步：
+  `README` 的「还不能做」改成「装个组件就能做」、`docs/manual.md` 第 7 节重写、新增
+  `docs/release-notes-0.0.2.md`、`docs/release.md` 加「三之二」记录实现与可复现的打包命令。

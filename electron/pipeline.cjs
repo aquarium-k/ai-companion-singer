@@ -52,6 +52,8 @@ function creatorPaths() {
     tools: path.join(dir, 'tools', 'pipeline.py'),
     pylibs: path.join(dir, 'pylibs'),
     model: path.join(dir, 'models', 'UVR_MDXNET_3_9662.onnx'),
+    // faster-whisper 的模型目录（纯文本歌词时的 ASR 对齐用）
+    whisper: path.join(dir, 'models', 'whisper-small'),
   }
 }
 
@@ -70,7 +72,7 @@ function usingCreator() {
 
 function pipelineEnv(root) {
   const c = usingCreator() ? creatorPaths() : null
-  return {
+  const env = {
     ...process.env,
     // 和 tools/pipeline.py 里的 ENV_DEFAULTS 保持一致；
     // 两边都设是为了直接从命令行跑时也能工作。
@@ -82,6 +84,9 @@ function pipelineEnv(root) {
     PYTHONUNBUFFERED: '1',
     PET_SANDBOX_FIX: '1',
   }
+  // creator pack 自带 whisper 模型：直接给本地目录，不走 huggingface 下载
+  if (c && fs.existsSync(c.whisper)) env.PET_WHISPER_MODEL = c.whisper
+  return env
 }
 
 /**

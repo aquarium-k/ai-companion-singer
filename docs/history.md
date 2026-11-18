@@ -2894,3 +2894,22 @@ SVC 只负责把相位重合成干净的一代。实测（352 用 24 步、384 �
   ⑤ 发布 v0.0.2（安装包 + creator pack + SHA256SUMS），版本号 0.0.2。文档同步：
   `README` 的「还不能做」改成「装个组件就能做」、`docs/manual.md` 第 7 节重写、新增
   `docs/release-notes-0.0.2.md`、`docs/release.md` 加「三之二」记录实现与可复现的打包命令。
+
+- **11-18 晚（v0.0.3：组件补上 Whisper）**：用户要求「whisper 这块也加上，一步到位」。
+  ① 先弄清依赖：`auto_align.py` 本来就用 **faster-whisper（CTranslate2）**，不需要 torch
+  （`align_lyrics.py` 那条 stable-ts 路径才要 torch 514 MB，流水线没走它）——但仓库 `.pylibs` 里
+  缺 `stable_whisper` 只是因为它是另一条路，真正的缺口是**组件里没带 ctranslate2/faster_whisper
+  和 whisper 模型**。pip 试装 stable-ts 才确认这一点（PyPI 上包名是 `stable-ts`；装上后 import
+  果然要 torch，于是放弃这条路、删掉）。
+  ② 组件补三样：`.pylibs` 里被排掉的 `ctranslate2 / faster_whisper / tokenizers / huggingface_hub /
+  hf_xet / fsspec`（+90 MB）、`models/whisper-small/`（HF 快照，461 MB）、以及
+  `pipeline.py` 的 `stage_align` 改成读 `PET_WHISPER_MODEL`（默认还是 `small`）。
+  App 在 creator 模式下把 `PET_WHISPER_MODEL` 指向组件里的模型目录 → **不联网**。
+  zip **561 MB**（解压 800 MB）。
+  ③ 踩坑：第一次 app 级测试 align 报 `huggingface_hub/file_download` 失败——组件里的
+  `tools/pipeline.py` 还是**拷贝时那版**（硬编码 `small`），我改的是仓库里的，忘了同步进组件；
+  重新拷 `tools/*.py`、重打 zip 后通过。第二个坑：`release/win-unpacked` 是上一次 `--dir` 的产物，
+  没有 `PET_WHISPER_MODEL` 那段代码，重打包才测出来。
+  ④ 实测：30 秒的歌、纯 .txt 歌词 → app 里导入 `state=done`；ASR 这一段 **159 秒**
+  （约 5 倍实时，small + int8 + CPU），说明书写明「3 分钟的歌 10–20 分钟」。
+  ⑤ 发布 v0.0.3（安装包 + 561 MB 组件 + SHA256SUMS），并把组件资产用修正后的 zip 重传了一次。

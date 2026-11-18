@@ -50,7 +50,7 @@
 | 设置持久化 | ✅ | 曲包/机位/音量/混音/和声模式/音色预设/HUD，重开全恢复 |
 | 打包 | ✅ | `electron-builder` 白名单打包：**免安装目录 264.7 MB**（exe 180 MB + app.asar 21 MB + 自带 VRM 14 MB），只保留中/日/英三套 Electron 语言包；exe 已带自己的图标与版本号；NSIS 安装包 89.6 MB。**打包版没有导入组件**（要 Python + 3 GB 依赖）：`import:start` 直接返回一句人话、选曲面板空状态也换了文案，不再抛 `ENOTDIR` |
 | 发布（v0.0.1） | ✅ | **GitHub 开发预览**：仓库 <https://github.com/aquarium-k/ai-companion-singer>（public，373 文件 / 21.8 MB）+ Release <https://github.com/aquarium-k/ai-companion-singer/releases/tag/v0.0.1>（`ai-companion-singer-0.0.1-setup.exe` 89.6 MB + `SHA256SUMS.txt`）。`.gitignore` 挡住 `data/`、`shots/`、`songpacks/`、`checkpoints/`、`text.vrm` 等 5 GB 内容；GitHub 算出的资产 digest = 本地 SHA256。推送走 SSH/443（本机 `github.com` DNS 被污染，见 `docs/release.md` 十） |
-| 做曲包（v0.0.2） | ✅ | **可选 creator pack**：`ai-companion-singer-creator-pack.zip`（105 MB，解压 250 MB）= Python 3.12（35 MB）+ numpy/av/onnxruntime/Pillow/pykakasi（187 MB）+ UVR MDX-Net 分离模型（28 MB）+ 流水线脚本。放到 `<userData>/creator/` 后按 `I` 就能导入自己的歌；没有它一切照旧（右键「做曲包组件…」解释 + 打开目录）。实测：打包版 + 下载解压出来的 zip → 30 s 的歌导入 `done`、曲包能被选曲面板加载 |
+| 做曲包（v0.0.3） | ✅ | **可选 creator pack**：`ai-companion-singer-creator-pack.zip`（**561 MB**，解压 800 MB）= Python 3.12（35 MB）+ numpy/av/onnxruntime/Pillow/pykakasi + **ctranslate2/faster-whisper**（276 MB）+ UVR MDX-Net 分离模型（28 MB）+ **whisper-small**（461 MB）+ 流水线脚本。放到 `<userData>/creator/` 后按 `I` 就能导入自己的歌，**LRC 和纯文本歌词都支持**（纯文本走 Whisper 对齐，CPU 上 3–6 倍音频时长）；没有它一切照旧（右键「做曲包组件…」解释 + 打开目录）。实测：打包版 + 解压出来的 zip → 30 s 的歌带 LRC 和带 .txt 两种都 `done`、曲包能被选曲面板加载 |
 | 界面（浅色桌面可读性） | ✅ | 左下键位提示原来直接压在桌面上（灰紫 #9d97b3），浅壁纸下看不清 → 改成和字幕同款的半透明深底 + 文字提亮 + 暗描边；顺手修了「提示条被键位提示压住」「说话气泡盖住选曲面板」「换行把『空格/节拍』拆两行」 |
 | 第一眼（默认界面） | ✅ | **HUD + 混音条默认关闭**（2026-11-18 用户决定）：第一次打开只有她，按 `H` 才出面板（HUD + 混音条 + 键位提示一起），开关状态会记住。`?hud=1` / `?nohud` 可强制。玩家说明见 `docs/manual.md` |
 | 代码签名 | 🟡 | 链路通了（自签实测 exe / 安装包 / 卸载器都签上），**缺一张 CA 证书**；没有签名的期间给 `release/SHA256SUMS.txt` + 说明。见 `docs/signing.md`、B 表 14 |
@@ -60,8 +60,8 @@
 - **发出去的是「开发预览」**：安装包**不带曲目**，也**不带做曲包要的工具链**（那是一个 105 MB 的
   可选 creator pack，v0.0.2 起提供）。所以新用户装上之后**先唱不了**——要么自己导入（装组件），
   要么等有人分享曲包。能站、能走、能挥手、能说话。这不是 bug，是版权 + 体积的取舍。
-- 组件里**没有语音识别模型**：歌词要用带时间戳的 LRC（「自动找歌词」抓的就是 LRC）；
-  纯文本歌词会走需要 ASR 的那条路，当前组件里没带模型，会失败。
+- 组件里**有语音识别**（faster-whisper small，v0.0.3 起）：LRC 直接用时间戳、不走 ASR；
+  纯文本歌词走 ASR，**CPU 上大约 3–6 倍音频时长**（3 分钟的歌 10–20 分钟），插值出来的行带 `≈`。
 - 歌词行首误差约 **1 秒**（少数 1–2 秒）；重复段用均分兜底。
 - 和声**跟谱面，不跟你跑调**（刻意如此，见三）。
 - 和声采样现在是 **48 段**：あ 24 段（210–850 Hz，**每档都用 SVC 在目标音高上直接生成**，
@@ -115,7 +115,9 @@
       `.gitignore` 挡住了 `data/`、`shots/`、`songpacks/`、`checkpoints/`、`text.vrm` 等 5 GB 内容。
       网络踩坑与推送方式见 `docs/release.md` 十（`github.com` DNS 污染 → 走 SSH/443 + `node scripts/push.mjs`）。
       **v0.0.2（同日稍晚）**：<https://github.com/aquarium-k/ai-companion-singer/releases/tag/v0.0.2> ——
-      `ai-companion-singer-0.0.2-setup.exe`（89.6 MB）+ `ai-companion-singer-creator-pack.zip`（105 MB）+ `SHA256SUMS.txt` |
+      `ai-companion-singer-0.0.2-setup.exe`（89.6 MB）+ `ai-companion-singer-creator-pack.zip`（105 MB）+ `SHA256SUMS.txt`。
+      **v0.0.3**：<https://github.com/aquarium-k/ai-companion-singer/releases/tag/v0.0.3> —— 安装包 89.6 MB +
+      creator pack **561 MB**（补了 Whisper，纯文本歌词也能导入）|
 | 16 | ~~**LICENSE**~~→ 未定 | 仓库现在**没有 LICENSE**（默认「保留所有权利」）。要决定：开源就加 MIT / Apache-2.0；不开源就在 README 里写明「代码保留所有权利，仅可阅读」。顺带：若走开源，可以申请 [SignPath Foundation](https://signpath.io) 的免费 OV 级签名（见 `docs/signing.md`） |
 
 ### C. 已决定不做（留档，免得再讨论一遍）

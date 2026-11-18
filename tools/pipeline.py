@@ -320,6 +320,9 @@ def align_skip(ctx: Context) -> str | None:
 
 
 def stage_align(ctx: Context) -> list[str]:
+    # 模型默认 small，但允许用环境变量换成本地目录（creator pack 里带的就是一份
+    # `models/whisper-small`，不联网、不用 huggingface 缓存）。
+    whisper_model = os.environ.get("PET_WHISPER_MODEL") or "small"
     return [
         sys.executable,
         str(TOOLS / "auto_align.py"),
@@ -328,7 +331,7 @@ def stage_align(ctx: Context) -> list[str]:
         "--lyrics", str(ctx.lyrics),
         "--out", str(ctx.pack_dir / "lyrics.auto.json"),
         "--words-out", str(ctx.pack_dir / "work" / "words.json"),
-        "--model", "small",
+        "--model", whisper_model,
         "--language", "ja",
     ]
 

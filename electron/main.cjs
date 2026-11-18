@@ -1340,9 +1340,10 @@ async function showCreatorInfo() {
   const { response } = await dialog.showMessageBox(win ?? undefined, {
     type: 'info',
     title: '做曲包组件',
-    message: '这个功能需要一个可选组件（解压后约 250 MB）',
+    message: '这个功能需要一个可选组件（解压后约 800 MB）',
     detail:
-      '安装包本身只带播放 / 跟唱 / 和声；做曲包要的人声分离、参考音高、逐字口型都在一个可选的包里。\n\n' +
+      '安装包本身只带播放 / 跟唱 / 和声；做曲包要的人声分离、参考音高、逐字口型，' +
+      '以及给纯文本歌词做对齐的语音识别模型，都在这个可选包里。\n\n' +
       `1) 到 GitHub Releases 下载 ai-companion-singer-creator-pack.zip\n` +
       `2) 解压到：${DIR_CREATOR}（点下面的「打开组件目录」）\n` +
       `3) 回到这里再试一次「导入歌曲」\n\n` +

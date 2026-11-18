@@ -63,8 +63,8 @@ v1 推荐 **C**：安装包只做「播放 + 跟唱 + 和声」，导入保留�
 
 | 项 | 值 |
 |---|---|
-| 下载 | `ai-companion-singer-creator-pack.zip`（**105 MB**，解压后 **250 MB**） |
-| 内容 | `python/`（CPython 3.12，裁掉 include/libs/tcl/site-packages，35 MB）、`pylibs/`（numpy / av / onnxruntime / Pillow / pykakasi 及其依赖，187 MB）、`models/UVR_MDXNET_3_9662.onnx`（28 MB，人声分离）、`tools/`（流水线脚本 1 MB） |
+| 下载 | `ai-companion-singer-creator-pack.zip`（v0.0.3 起 **561 MB**，解压后 **800 MB**；v0.0.2 是 105 MB，没有 ASR） |
+| 内容 | `python/`（CPython 3.12，裁掉 include/libs/tcl/site-packages，35 MB）、`pylibs/`（numpy / av / onnxruntime / Pillow / pykakasi，以及 **ctranslate2 / faster-whisper**，276 MB）、`models/UVR_MDXNET_3_9662.onnx`（28 MB，人声分离）、`models/whisper-small/`（**461 MB**，纯文本歌词的 ASR 对齐）、`tools/`（流水线脚本 1 MB） |
 | 放哪 | `<userData>/creator/`（`%APPDATA%\伴唱桌宠\creator`，右键「做曲包组件…」会打开这个目录） |
 | 没有它 | 一切照旧：播放 / 跟唱 / 和声都能用，只是按 `I` 会弹说明框（原生 dialog，含下载说明 + 「打开组件目录」） |
 | 有它 | `import:status.available = true`，按 `I` 走正常导入流程 |
@@ -77,8 +77,14 @@ v1 推荐 **C**：安装包只做「播放 + 跟唱 + 和声」，导入保留�
 4. `start()` 用 creator 的 `tools/pipeline.py`、传 `--model creator/models/...`，
    **cwd 用 creator 目录**（打包后 `ctx.root` 是 `app.asar`，是个文件，拿它当 cwd 会 ENOENT）；
    日志写到 `DIR_DATA`（同样因为 asar 只读）。
-5. **不含语音识别模型**：LRC 带时间戳时 `align` 阶段直接跳过（`align_skip`），所以组件里不需要
-   whisper/ctranslate2；纯文本歌词那条路会失败（已知、写在说明里）。
+5. **语音识别（v0.0.3 起）**：`auto_align.py` 本来就用 faster-whisper（不依赖 torch），所以组件里
+   补回 `ctranslate2` / `faster_whisper` / `tokenizers` / `huggingface_hub` 一套（+90 MB）和
+   `models/whisper-small/`（461 MB）。**不用装 torch**——`align_lyrics.py` 那条 stable-ts 路径需要
+   torch（514 MB），是另一条路，流水线没用它。
+   `stage_align` 改成读环境变量 `PET_WHISPER_MODEL`（默认 `small`）；App 在 creator 模式下把它指向
+   组件里的模型目录，所以**不联网、不用 HF 缓存**。想换小模型：把 `models/whisper-small/` 换成
+   `base`/`tiny` 的 CTranslate2 目录即可（速度更快、精度更低）。
+   **实测代价**：30 秒的歌，small + int8 在 CPU 上跑 **159 秒**（约 5 倍实时），3 分钟的歌要 10–20 分钟。
 
 实测（2026-11-18，打包版 + creator pack）：30 秒的歌 → `job.state = done`，
 产物 `stems/`、`work/f0.json`、`lyrics.units.json`、`actions.json`、`pack.json(schema 2)` 齐全；
@@ -89,10 +95,11 @@ v1 推荐 **C**：安装包只做「播放 + 跟唱 + 和声」，导入保留�
 ```powershell
 # 1) python：拷一份运行时，删掉用不到的
 robocopy <python-dir> .tmp\creator\python /E /XD include libs tcl Scripts Lib\test Lib\idlelib Lib\tkinter Lib\site-packages Lib\ensurepip Lib\lib2to3
-# 2) pylibs：拷依赖，排除 whisper/HF 那一套（组件里不做 ASR）
-robocopy .pylibs .tmp\creator\pylibs /E /XD ctranslate2* faster_whisper* tokenizers* hf_xet* huggingface_hub* fsspec* pyarrow*
+# 2) pylibs：整个拷过去（v0.0.3 起连 ctranslate2 / faster_whisper 一起带，纯文本歌词要用 ASR）
+robocopy .pylibs .tmp\creator\pylibs /E /XD pyarrow*
 # 3) 模型 + 脚本
 copy .cache\models\UVR_MDXNET_3_9662.onnx .tmp\creator\models\
+copy <hf>\models--Systran--faster-whisper-small\snapshots\<sha>\* .tmp\creator\models\whisper-small\
 copy tools\*.py .tmp\creator\tools\
 # 4) 打 zip（Windows 自带 bsdtar 支持 -a 按扩展名选格式）
 cd .tmp\creator; tar.exe -a -c -f ..\ai-companion-singer-creator-pack.zip python pylibs tools models

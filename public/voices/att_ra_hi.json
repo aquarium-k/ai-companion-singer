@@ -1,0 +1,10 @@
+{
+ "kind": "consonant",
+ "source": "shots/cover90s40.wav",
+ "songTime": 64.97,
+ "rootHz": 535.8,
+ "leadSec": 0.04,
+ "lengthSec": 0.09,
+ "sampleRate": 22050,
+ "note": "歌の「ら」。前 40 ms が閉鎖、46 ms から元音"
+}

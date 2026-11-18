@@ -1,0 +1,16 @@
+{
+ "kind": "vowel",
+ "source": "用户录音 a_up8.m4a → SVC(refvoice3)",
+ "rootHz": 456.6,
+ "leadSec": 0.04,
+ "lengthSec": 0.17,
+ "sampleRate": 22050,
+ "note": "高音区样本（升八度录音）",
+ "harmEq": {
+  "f0": 456.6,
+  "k1": -7.5,
+  "k3": 8.5,
+  "k5": -3.0,
+  "k8": -12.0
+ }
+}

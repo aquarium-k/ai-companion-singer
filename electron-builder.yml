@@ -1,0 +1,103 @@
+# electron-builder 配置（2026-11-18）
+#
+# 原则：**白名单**。只列要进包的东西，不要把仓库整个塞进去——
+# 仓库里有 .pylibs(276 MB) / .svclibs(1.2 GB) / .tmp(1.5 GB) / shots(363 MB) / 曲包(66 MB)。
+# 体积与实际布局见 docs/release.md。
+appId: com.aicompanion.singer
+productName: 伴唱桌宠
+copyright: Copyright © 2026
+
+directories:
+  output: release
+  buildResources: build
+
+# 只保留用得到的语言包（Electron 自带 50 多套 locale，每套 200–600 KB）
+electronLanguages:
+  - zh-CN
+  - ja
+  - en-US
+
+# 安装包用最大压缩（只影响 nsis，不影响 --dir 的目录体积）
+compression: maximum
+
+# 只打 Windows（现在也只验证 Windows）
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  # 图标：`scripts/make-icon.py` 生成（粉紫渐变圆 + 音符 + 声波），多尺寸 ico
+  icon: build/icon.ico
+  #
+  # 2026-11-18：用户打开了 Windows「开发者模式」，winCodeSign 里的符号链接能解了，
+  # 所以 `signAndEditExecutable` 不再关掉 —— 关掉会跳过 rcedit，exe 文件图标/版本号
+  # 就还是 Electron 默认的。真要出「已签名」的包还得有代码签名证书，这一项只负责
+  # 改图标和版本资源（未签名 = SmartScreen 会提示「未知发布者」）。
+  #
+  # 有证书之后**不用改这个文件**：设环境变量再打包即可（electron-builder 自动认）
+  #   $env:CSC_LINK = 'D:\certs\xxx.pfx'; $env:CSC_KEY_PASSWORD = '...'
+  #   pnpm run package:installer
+  # 选型 / 价格 / 云 HSM（Azure Trusted Signing）接法见 docs/signing.md。
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 伴唱桌宠
+
+files:
+  - package.json
+  - electron/**
+  - dist/**
+  # 和声采样 + 起音片段 + 清单（运行时只读）
+  - public/voices/loop_*.wav
+  - public/voices/loop_*.json
+  - public/voices/loop_e_*.wav
+  - public/voices/loop_e_*.json
+  # 起音片段（ら/は/あ）：不带的话 `status().bank` 是 0，
+  # 咬字会退回「软凹陷」——功能不报错但听感差一截（2026-11-18 踩过）
+  - public/voices/att_*.wav
+  - public/voices/att_*.json
+  - public/voices/loops.json
+  - public/voices/bank.json
+  - public/voices/harmony*.wav
+  - public/voices/harmony*.json
+  - public/voices/timbre-target.json
+  # 烘焙中间产物、修音备份：**不进包**
+  - "!public/voices/_orig/**"
+  - "!public/voices/_work/**"
+  - "!public/voices/_orig_stretch/**"
+  - "!public/voices/_orig_rebake/**"
+  # 曲包不进包（用户自己的歌 + 版权），打包后运行时目录在 userData
+  - "!public/songpacks/**"
+  # 源码 / 文档 / 实验素材
+  - "!src/**"
+  - "!docs/**"
+  - "!shots/**"
+  - "!tools/**"
+  - "!data/**"
+  - "!scripts/**"
+  - "!**/*.map"
+
+# 自带的 VRM 走 models/（main.cjs 的 list-models 会同时列自带的与 userData 里的）。
+#
+# 2026-11-18 换成用户新导出的 `models/saki.vrm`（VRoid Studio 2.16 / VRM 1.0）。
+# 它的 VRM meta 是最宽松的一档，可以随应用分发：
+#   authors: aq / licenseUrl: https://vrm.dev/licenses/1.0/
+#   avatarPermission: everyone / commercialUsage: corporation
+#   allowRedistribution: true / modification: allowModificationRedistribution
+#   creditNotation: unnecessary（不用署名，但发布说明里还是谢一句）
+#   allowExcessivelyViolent/Sexual: false —— 别拿它做暴力/性表现，我们的用法无关
+#
+# 旧的 `text.vrm` **不能进包**：avatarPermission = onlySeparatelyLicensedPerson，
+# commercialUsage = personalNonProfit，creditNotation = required。
+# 仓库里留着它没问题（本地自己用），只是别打进安装包。
+extraResources:
+  - from: models
+    to: models
+    filter:
+      - "saki.vrm"
+
+asar: true
+# 声音/模型从 asar 里读没问题（Electron 的 fs 补丁支持），不需要 unpack

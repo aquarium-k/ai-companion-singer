@@ -1,0 +1,342 @@
+{
+ "schema": 1,
+ "maxGap": 1.7,
+ "loops": [
+  {
+   "url": "voices/loop_210.wav",
+   "rootHz": 209.93,
+   "familyRootHz": 258.02,
+   "from": "svc-direct 210",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_225.wav",
+   "rootHz": 224.83,
+   "familyRootHz": 258.02,
+   "from": "svc-direct 225",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_241.wav",
+   "rootHz": 240.94,
+   "familyRootHz": 258.02,
+   "from": "svc-direct 241",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_258.wav",
+   "rootHz": 258.11,
+   "familyRootHz": 258.02,
+   "from": "svc-direct 258",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_273.wav",
+   "rootHz": 273.14,
+   "familyRootHz": 258.02,
+   "from": "svc-direct 273",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_289.wav",
+   "rootHz": 289.16,
+   "familyRootHz": 324.02,
+   "from": "svc-direct 289",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_306.wav",
+   "rootHz": 306.1,
+   "familyRootHz": 324.02,
+   "from": "svc-direct 306",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_324.wav",
+   "rootHz": 324.02,
+   "familyRootHz": 324.02,
+   "from": "svc-direct 324",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_352.wav",
+   "rootHz": 351.81,
+   "familyRootHz": 324.02,
+   "from": "svc-direct 352",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_384.wav",
+   "rootHz": 381.99,
+   "familyRootHz": 381.99,
+   "from": "svc-direct 382",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_419.wav",
+   "rootHz": 418.56,
+   "familyRootHz": 418.56,
+   "from": "svc-direct 419",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_441.wav",
+   "rootHz": 441.19,
+   "familyRootHz": 418.56,
+   "from": "svc-direct 441",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_465.wav",
+   "rootHz": 465.17,
+   "familyRootHz": 516.75,
+   "from": "svc-direct 465",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_490.wav",
+   "rootHz": 490.24,
+   "familyRootHz": 516.75,
+   "from": "svc-direct 490",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_516.wav",
+   "rootHz": 516.85,
+   "familyRootHz": 516.75,
+   "from": "svc-direct 517",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_543.wav",
+   "rootHz": 543.33,
+   "familyRootHz": 571.25,
+   "from": "svc-direct 543",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_575.wav",
+   "rootHz": 571.24,
+   "familyRootHz": 571.25,
+   "from": "svc-direct 571",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_605.wav",
+   "rootHz": 604.67,
+   "familyRootHz": 571.25,
+   "from": "svc-direct 605",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_640.wav",
+   "rootHz": 639.98,
+   "familyRootHz": 571.25,
+   "from": "svc-direct 640",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_677.wav",
+   "rootHz": 677.54,
+   "familyRootHz": 571.25,
+   "from": "svc-direct 677",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_717.wav",
+   "rootHz": 717.02,
+   "familyRootHz": 571.25,
+   "from": "svc-direct 717",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_759.wav",
+   "rootHz": 758.62,
+   "familyRootHz": 571.25,
+   "from": "svc-direct 759",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_803.wav",
+   "rootHz": 803.29,
+   "familyRootHz": 571.25,
+   "from": "svc-direct 803",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_850.wav",
+   "rootHz": 850.28,
+   "familyRootHz": 571.25,
+   "from": "svc-direct 850",
+   "vowel": "a"
+  },
+  {
+   "url": "voices/loop_e_210.wav",
+   "rootHz": 209.96,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 -3.57"
+  },
+  {
+   "url": "voices/loop_e_225.wav",
+   "rootHz": 224.89,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +1.19"
+  },
+  {
+   "url": "voices/loop_e_241.wav",
+   "rootHz": 240.88,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +1.19"
+  },
+  {
+   "url": "voices/loop_e_258.wav",
+   "rootHz": 258.02,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 -5.37"
+  },
+  {
+   "url": "voices/loop_e_273.wav",
+   "rootHz": 273.13,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.99"
+  },
+  {
+   "url": "voices/loop_e_289.wav",
+   "rootHz": 289.16,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.99"
+  },
+  {
+   "url": "voices/loop_e_306.wav",
+   "rootHz": 306.1,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.99"
+  },
+  {
+   "url": "voices/loop_e_324.wav",
+   "rootHz": 324.01,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.99"
+  },
+  {
+   "url": "voices/loop_e_352.wav",
+   "rootHz": 351.79,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 -4.90"
+  },
+  {
+   "url": "voices/loop_e_382.wav",
+   "rootHz": 381.98,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +1.43"
+  },
+  {
+   "url": "voices/loop_e_419.wav",
+   "rootHz": 418.57,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +1.58"
+  },
+  {
+   "url": "voices/loop_e_441.wav",
+   "rootHz": 441.19,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.91"
+  },
+  {
+   "url": "voices/loop_e_465.wav",
+   "rootHz": 466.97,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "seed"
+  },
+  {
+   "url": "voices/loop_e_490.wav",
+   "rootHz": 490.24,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.84"
+  },
+  {
+   "url": "voices/loop_e_517.wav",
+   "rootHz": 516.75,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.91"
+  },
+  {
+   "url": "voices/loop_e_543.wav",
+   "rootHz": 543.31,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.87"
+  },
+  {
+   "url": "voices/loop_e_571.wav",
+   "rootHz": 571.25,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.87"
+  },
+  {
+   "url": "voices/loop_e_605.wav",
+   "rootHz": 604.67,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.98"
+  },
+  {
+   "url": "voices/loop_e_640.wav",
+   "rootHz": 640.0,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.98"
+  },
+  {
+   "url": "voices/loop_e_677.wav",
+   "rootHz": 677.4,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.98"
+  },
+  {
+   "url": "voices/loop_e_717.wav",
+   "rootHz": 717.02,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.98"
+  },
+  {
+   "url": "voices/loop_e_759.wav",
+   "rootHz": 758.93,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.98"
+  },
+  {
+   "url": "voices/loop_e_803.wav",
+   "rootHz": 803.31,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.98"
+  },
+  {
+   "url": "voices/loop_e_850.wav",
+   "rootHz": 850.32,
+   "familyRootHz": 466.97,
+   "vowel": "e",
+   "from": "loop_e_465 +0.98"
+  }
+ ]
+}

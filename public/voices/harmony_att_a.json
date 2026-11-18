@@ -1,0 +1,9 @@
+{
+ "kind": "vowel",
+ "source": "shots/cover90s40/part_00.wav",
+ "songTime": 16.61,
+ "rootHz": 260.55,
+ "lengthSec": 0.128,
+ "leadSec": 0.006,
+ "sampleRate": 22050
+}

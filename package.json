@@ -1,0 +1,31 @@
+{
+  "name": "ai-companion-singer",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "AI 伴唱桌宠 - 初步工程 (P0)",
+  "author": "ai-companion-singer contributors",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/build.mjs && node scripts/start.mjs",
+    "shot": "node scripts/build.mjs && node scripts/start.mjs --shot",
+    "diagnose": "node scripts/doctor.mjs",
+    "typecheck": "tsc --noEmit",
+    "package": "node scripts/build.mjs && electron-builder --dir",
+    "package:installer": "node scripts/package_installer.mjs"
+  },
+  "devDependencies": {
+    "@types/three": "^0.170.0",
+    "electron": "^33.2.1",
+    "electron-fix": "^1.1.7",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "@pixiv/three-vrm": "^3.3.2",
+    "three": "^0.170.0"
+  }
+}

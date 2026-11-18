@@ -1,0 +1,9 @@
+{
+ "kind": "attack",
+ "source": "shots/ref3/sep/ref3_vocals.wav",
+ "songTime": 17.25,
+ "rootHz": 305.64,
+ "lengthSec": 0.124,
+ "leadSec": 0.008,
+ "sampleRate": 22050
+}

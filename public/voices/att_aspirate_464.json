@@ -1,0 +1,10 @@
+{
+ "kind": "aspirate",
+ "source": "用户录音 ha_up8.m4a → SVC(refvoice3)",
+ "rootHz": 464.5,
+ "leadSec": 0.058,
+ "lengthSec": 0.1384,
+ "sampleRate": 22050,
+ "note": "高音区样本（升八度录音）",
+ "onsetTrimmed": 0.092
+}

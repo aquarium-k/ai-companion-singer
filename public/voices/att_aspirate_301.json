@@ -1,0 +1,10 @@
+{
+ "kind": "aspirate",
+ "source": "用户录音 ha.m4a → SVC(refvoice3)",
+ "rootHz": 301.2,
+ "leadSec": 0.058,
+ "lengthSec": 0.1084,
+ "sampleRate": 22050,
+ "note": "用户音阶 + seed-vc 换音色",
+ "onsetTrimmed": 0.122
+}

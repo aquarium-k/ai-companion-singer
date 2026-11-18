@@ -1,0 +1,11 @@
+{
+ "source": "loop_e_465.wav",
+ "rootHz": 209.96,
+ "lengthSec": 0.3191,
+ "sampleRate": 44100,
+ "periods": 67,
+ "shiftSemitones": -3.569,
+ "method": "psola",
+ "vowel": "e",
+ "familyRootHz": 466.97
+}

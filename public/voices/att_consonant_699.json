@@ -1,0 +1,18 @@
+{
+ "kind": "consonant",
+ "source": "用户录音 ra_up8.m4a → SVC(refvoice3)",
+ "rootHz": 698.6,
+ "leadSec": 0.016,
+ "lengthSec": 0.1512,
+ "sampleRate": 22050,
+ "note": "高音区样本（升八度录音）",
+ "trimmedFrom": 0.09,
+ "onsetTrimmed": 0.069,
+ "harmEq": {
+  "f0": 698.6,
+  "k1": -7.5,
+  "k3": 8.5,
+  "k5": -3.0,
+  "k8": -12.0
+ }
+}

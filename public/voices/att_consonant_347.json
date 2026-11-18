@@ -1,0 +1,18 @@
+{
+ "kind": "consonant",
+ "source": "用户录音 ra.m4a → SVC(refvoice3)",
+ "rootHz": 346.7,
+ "leadSec": 0.016,
+ "lengthSec": 0.0714,
+ "sampleRate": 22050,
+ "note": "用户音阶 + seed-vc 换音色",
+ "trimmedFrom": 0.09,
+ "onsetTrimmed": 0.149,
+ "harmEq": {
+  "f0": 346.7,
+  "k1": -7.5,
+  "k3": 8.5,
+  "k5": -3.0,
+  "k8": -12.0
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "kind": "vowel",
+ "source": "用户录音 a.m4a → SVC(refvoice3)",
+ "rootHz": 383.5,
+ "leadSec": 0.04,
+ "lengthSec": 0.17,
+ "sampleRate": 22050,
+ "note": "用户音阶 + seed-vc 换音色",
+ "harmEq": {
+  "f0": 383.5,
+  "k1": -7.5,
+  "k3": 8.5,
+  "k5": -3.0,
+  "k8": -12.0
+ }
+}

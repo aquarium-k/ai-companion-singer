@@ -1,0 +1,10 @@
+{
+ "source": "svc@640",
+ "rootHz": 639.98,
+ "lengthSec": 1.9032,
+ "sampleRate": 44100,
+ "periods": 1218,
+ "method": "td-psola-stretch",
+ "familyRootHz": 571.25,
+ "stretched": 3.0
+}

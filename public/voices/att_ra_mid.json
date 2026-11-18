@@ -1,0 +1,10 @@
+{
+ "kind": "consonant",
+ "source": "shots/ref3/sep/ref3_vocals.wav",
+ "songTime": 17.184,
+ "rootHz": 305.64,
+ "leadSec": 0.012,
+ "lengthSec": 0.09,
+ "sampleRate": 22050,
+ "note": "対白の「から」の ら。持続部は切り落とし、瞬態+元音頭だけ"
+}

@@ -1,0 +1,214 @@
+{
+ "samples": [
+  {
+   "url": "voices/att_aspirate_200.wav",
+   "kind": "aspirate",
+   "rootHz": 200.1
+  },
+  {
+   "url": "voices/att_aspirate_226.wav",
+   "kind": "aspirate",
+   "rootHz": 226.4
+  },
+  {
+   "url": "voices/att_aspirate_270.wav",
+   "kind": "aspirate",
+   "rootHz": 270.3
+  },
+  {
+   "url": "voices/att_aspirate_272.wav",
+   "kind": "aspirate",
+   "rootHz": 272.0
+  },
+  {
+   "url": "voices/att_aspirate_301.wav",
+   "kind": "aspirate",
+   "rootHz": 301.2
+  },
+  {
+   "url": "voices/att_aspirate_336.wav",
+   "kind": "aspirate",
+   "rootHz": 336.1
+  },
+  {
+   "url": "voices/att_aspirate_383.wav",
+   "kind": "aspirate",
+   "rootHz": 383.5
+  },
+  {
+   "url": "voices/att_aspirate_464.wav",
+   "kind": "aspirate",
+   "rootHz": 464.5
+  },
+  {
+   "url": "voices/att_aspirate_515.wav",
+   "kind": "aspirate",
+   "rootHz": 515.2
+  },
+  {
+   "url": "voices/att_aspirate_631.wav",
+   "kind": "aspirate",
+   "rootHz": 630.8
+  },
+  {
+   "url": "voices/att_aspirate_758.wav",
+   "kind": "aspirate",
+   "rootHz": 757.9
+  },
+  {
+   "url": "voices/att_aspirate_795.wav",
+   "kind": "aspirate",
+   "rootHz": 795.2
+  },
+  {
+   "url": "voices/att_consonant_200.wav",
+   "kind": "consonant",
+   "rootHz": 199.6
+  },
+  {
+   "url": "voices/att_consonant_230.wav",
+   "kind": "consonant",
+   "rootHz": 230.0
+  },
+  {
+   "url": "voices/att_consonant_306.wav",
+   "kind": "consonant",
+   "rootHz": 305.5
+  },
+  {
+   "url": "voices/att_consonant_347.wav",
+   "kind": "consonant",
+   "rootHz": 346.7
+  },
+  {
+   "url": "voices/att_consonant_415.wav",
+   "kind": "consonant",
+   "rootHz": 415.3
+  },
+  {
+   "url": "voices/att_consonant_426.wav",
+   "kind": "consonant",
+   "rootHz": 426.0
+  },
+  {
+   "url": "voices/att_consonant_467.wav",
+   "kind": "consonant",
+   "rootHz": 466.7
+  },
+  {
+   "url": "voices/att_consonant_508.wav",
+   "kind": "consonant",
+   "rootHz": 507.7
+  },
+  {
+   "url": "voices/att_consonant_553.wav",
+   "kind": "consonant",
+   "rootHz": 553.4
+  },
+  {
+   "url": "voices/att_consonant_572.wav",
+   "kind": "consonant",
+   "rootHz": 572.0
+  },
+  {
+   "url": "voices/att_consonant_620.wav",
+   "kind": "consonant",
+   "rootHz": 620.4
+  },
+  {
+   "url": "voices/att_consonant_699.wav",
+   "kind": "consonant",
+   "rootHz": 698.6
+  },
+  {
+   "url": "voices/att_consonant_775.wav",
+   "kind": "consonant",
+   "rootHz": 775.2
+  },
+  {
+   "url": "voices/att_consonant_817.wav",
+   "kind": "consonant",
+   "rootHz": 816.7
+  },
+  {
+   "url": "voices/att_vowel_206.wav",
+   "kind": "vowel",
+   "rootHz": 206.4
+  },
+  {
+   "url": "voices/att_vowel_230.wav",
+   "kind": "vowel",
+   "rootHz": 230.2
+  },
+  {
+   "url": "voices/att_vowel_257.wav",
+   "kind": "vowel",
+   "rootHz": 257.3
+  },
+  {
+   "url": "voices/att_vowel_268.wav",
+   "kind": "vowel",
+   "rootHz": 267.7
+  },
+  {
+   "url": "voices/att_vowel_302.wav",
+   "kind": "vowel",
+   "rootHz": 302.1
+  },
+  {
+   "url": "voices/att_vowel_339.wav",
+   "kind": "vowel",
+   "rootHz": 339.0
+  },
+  {
+   "url": "voices/att_vowel_384.wav",
+   "kind": "vowel",
+   "rootHz": 383.5
+  },
+  {
+   "url": "voices/att_vowel_388.wav",
+   "kind": "vowel",
+   "rootHz": 388.2
+  },
+  {
+   "url": "voices/att_vowel_405.wav",
+   "kind": "vowel",
+   "rootHz": 404.9
+  },
+  {
+   "url": "voices/att_vowel_457.wav",
+   "kind": "vowel",
+   "rootHz": 456.6
+  },
+  {
+   "url": "voices/att_vowel_516.wav",
+   "kind": "vowel",
+   "rootHz": 515.7
+  },
+  {
+   "url": "voices/att_vowel_553.wav",
+   "kind": "vowel",
+   "rootHz": 553.5
+  },
+  {
+   "url": "voices/att_vowel_608.wav",
+   "kind": "vowel",
+   "rootHz": 608.1
+  },
+  {
+   "url": "voices/att_vowel_687.wav",
+   "kind": "vowel",
+   "rootHz": 687.4
+  },
+  {
+   "url": "voices/att_vowel_755.wav",
+   "kind": "vowel",
+   "rootHz": 755.0
+  },
+  {
+   "url": "voices/att_vowel_815.wav",
+   "kind": "vowel",
+   "rootHz": 815.3
+  }
+ ]
+}

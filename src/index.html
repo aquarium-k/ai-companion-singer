@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- 标题在 main.ts 里按语言再写一次 -->
+    <title>AI 伴唱桌宠</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+
+    <!-- 她说的一句话（换歌时评价风格 + 推荐怎么唱）。放在头顶上方，避开下面的字幕/进度条 -->
+    <div id="speech" class="speech"></div>
+
+    <div id="hud" class="hud"></div>
+
+    <div id="lyric" class="lyric"></div>
+
+    <div id="banner" class="banner"></div>
+
+    <!-- C1 混音：人声拉到底就是「伴唱」模式，只剩下伴奏 -->
+    <div id="mixer" class="mixer">
+      <div class="mix-row" data-channel="vocal">
+        <span class="mix-tag" data-i18n="ui.vocal">人声</span>
+        <input id="mix-vocal" class="mix-slider" type="range" min="0" max="100" step="1" value="100" />
+        <span class="mix-val" id="mix-vocal-val">100</span>
+      </div>
+      <div class="mix-row" data-channel="instrumental">
+        <span class="mix-tag" data-i18n="ui.instrumental">伴奏</span>
+        <input id="mix-instrumental" class="mix-slider" type="range" min="0" max="100" step="1" value="100" />
+        <span class="mix-val" id="mix-instrumental-val">100</span>
+      </div>
+      <div class="mix-row" data-channel="harmony">
+        <span class="mix-tag" data-i18n="ui.harmony">和声</span>
+        <input id="mix-harmony" class="mix-slider" type="range" min="0" max="100" step="1" value="16" />
+        <span class="mix-val" id="mix-harmony-val">16</span>
+      </div>
+      <!-- 咬字方式：自动（按歌词假名，ら行走辅音）/ あ / ら / 关 -->
+      <div class="mix-row mix-row-att">
+        <span class="mix-tag" data-i18n="ui.attack">咬字</span>
+        <button id="att-btn" class="att-btn" type="button" data-i18n="ui.attack.auto" data-i18n-title="ui.attack.tip">自动</button>
+      </div>
+      <!-- 跟唱：点一下开麦克风。
+           2026-11-16 用户反馈「按 V 没调用麦克风」——V 其实是「伴唱（原唱/翻唱）」，
+           开麦一直是 G 键，而且 G 既没写进键位提示、也没有菜单入口，等于藏起来了。 -->
+      <div class="mix-row mix-row-att">
+        <span class="mix-tag" data-i18n="ui.mic">跟唱</span>
+        <button id="mic-btn" class="att-btn" type="button" data-i18n="ui.mic.off" data-i18n-title="ui.mic.tip">关</button>
+      </div>
+      <!-- 和声预设：用户调好的整套音色参数，点一下切换（记在 localStorage） -->
+      <div class="mix-row mix-row-att">
+        <span class="mix-tag" data-i18n="ui.timbre">音色</span>
+        <button id="preset-btn" class="att-btn" type="button" data-i18n="ui.preset.user" data-i18n-title="ui.preset.tip">用户版</button>
+      </div>
+    </div>
+
+    <!-- 曲目进度条：拖动 / 点击定位（和 HUD 一起显示） -->
+    <div id="seek" class="seek">
+      <span id="seek-now" class="seek-time">0:00</span>
+      <input id="seek-range" class="seek-range" type="range" min="0" max="1000" step="1" value="0" />
+      <span id="seek-total" class="seek-time">0:00</span>
+    </div>
+
+    <div id="drop-hint" class="drop-hint" data-i18n="ui.drop">松手载入 VRM / 音频</div>
+
+    <!-- B4 选曲：列出 index.json 里的曲包，点一下就重开页面切过去 -->
+    <div id="packs" class="packs">
+      <div class="packs-head">
+        <span class="packs-title" data-i18n="ui.packs.title">选择曲目</span>
+        <span class="packs-hint" data-i18n="ui.packs.hint">Esc 关闭</span>
+      </div>
+      <div id="pack-list" class="pack-list"></div>
+      <div id="pack-empty" class="pack-empty" style="display: none">
+        <span data-i18n="ui.packs.empty">还没有曲包。按 I 导入一首，或把音频拖进来。</span>
+      </div>
+    </div>
+
+    <!-- B1 导入：拖入音频或按 I，五阶段进度都在这里 -->
+    <div id="import" class="import">
+      <div class="import-head">
+        <span id="import-title" class="import-title" data-i18n="ui.import.title">导入</span>
+        <span id="import-bpm" class="import-bpm"></span>
+      </div>
+      <div id="import-source" class="import-source">
+        <span class="import-source-tag" data-i18n="ui.import.lyrics">歌词</span>
+        <span id="import-lyrics" class="import-lyrics" data-i18n="ui.import.none">未选择</span>
+        <button id="import-auto" class="import-btn ghost" data-i18n="ui.import.autoFind">自动找</button>
+        <button id="import-pick-lyrics" class="import-btn ghost" data-i18n="ui.import.pick">选择…</button>
+      </div>
+      <div id="import-candidates" class="import-candidates"></div>
+      <div id="import-rows" class="import-rows"></div>
+      <div id="import-error" class="import-error"></div>
+      <div class="import-actions">
+        <button id="import-start" class="import-btn" data-i18n="ui.import.start">开始导入</button>
+        <button id="import-retry" class="import-btn" data-i18n="ui.import.retry">重试这一步</button>
+        <button id="import-cancel" class="import-btn ghost" data-i18n="ui.import.cancel">取消</button>
+      </div>
+    </div>
+
+    <!-- 机位切换：正面平视 ↔ 角色右上方（3/4 视角） -->
+    <button id="cam-btn" class="cam-btn" type="button" data-i18n="ui.cam.front" data-i18n-title="ui.cam.tip">镜头 正面</button>
+
+    <!-- 镜头微调：右键菜单「镜头 → 调整…」打开。滑杆直接改 stage 的构图状态 -->
+    <div id="cam" class="cam">
+      <div class="cam-head">
+        <span class="cam-title" data-i18n="ui.cam">镜头</span>
+        <span class="cam-hint" data-i18n="ui.cam.hint">Esc 关闭</span>
+      </div>
+      <div class="cam-row">
+        <span class="cam-tag" data-i18n="ui.cam.orbit">环绕</span>
+        <input id="cam-orbit" class="cam-slider" type="range" min="-180" max="180" step="1" value="0">
+        <span id="cam-orbit-v" class="cam-val">0°</span>
+      </div>
+      <div class="cam-row">
+        <span class="cam-tag" data-i18n="ui.cam.height">高度</span>
+        <input id="cam-elev" class="cam-slider" type="range" min="-20" max="160" step="1" value="0">
+        <span id="cam-elev-v" class="cam-val">0.00 m</span>
+      </div>
+      <div class="cam-row">
+        <span class="cam-tag" data-i18n="ui.cam.dist">距离</span>
+        <input id="cam-dist" class="cam-slider" type="range" min="120" max="520" step="5" value="265">
+        <span id="cam-dist-v" class="cam-val">2.65 m</span>
+      </div>
+      <div class="cam-row">
+        <span class="cam-tag" data-i18n="ui.cam.look">注视</span>
+        <input id="cam-look" class="cam-slider" type="range" min="30" max="150" step="1" value="78">
+        <span id="cam-look-v" class="cam-val">0.78 m</span>
+      </div>
+      <div class="cam-actions">
+        <button id="cam-reset-front" class="cam-btn2" type="button" data-i18n="ui.cam.front">正面</button>
+        <button id="cam-reset-over" class="cam-btn2" type="button" data-i18n="ui.cam.over">右上方</button>
+        <button id="cam-close" class="cam-btn2 ghost" type="button" data-i18n="ui.cam.close">关闭</button>
+      </div>
+    </div>
+
+    <div class="keys">
+      <b class="k"><span>1</span><em data-i18n="keys.bounce">摇摆</em></b> <b class="k"><span>2</span><em data-i18n="keys.wave">挥手</em></b> <b class="k"><span>3</span><em data-i18n="keys.spin">转圈</em></b>
+      <b class="k"><span>4</span><em data-i18n="keys.nod">点头</em></b> <b class="k"><span>5</span><em data-i18n="keys.shake">摇头</em></b> <b class="k"><span>7</span><em data-i18n="keys.sing">唱歌</em></b> <b class="k"><span>8</span><em data-i18n="keys.cheer">欢呼</em></b> <b class="k"><span>9</span><em data-i18n="keys.lean">凑近</em></b> <b class="k"><span>0</span><em data-i18n="keys.reach">伸手</em></b>
+      <b class="k"><span>C</span><em data-i18n="keys.clap">鼓掌</em></b> <b class="k"><span>Q</span><em data-i18n="keys.gesture">手势</em></b> <b class="k"><span>N</span><em data-i18n="keys.hair">拨头发</em></b> <b class="k"><span>W</span><em data-i18n="keys.walk">走路</em></b> <b class="k"><span>A</span><em data-i18n="keys.harmony">和声</em></b> <b class="k"><span>F</span><em data-i18n="keys.camera">镜头</em></b>
+      <b class="k"><span>E</span><em data-i18n="keys.poseEditor">姿势编辑</em></b> <b class="k"><span>空格</span><em data-i18n="keys.metronome">节拍</em></b> <b class="k"><span>P</span><em data-i18n="keys.play">播放</em></b> <b class="k"><span>R</span><em data-i18n="keys.restart">重来</em></b>
+      <b class="k"><span>V</span><em data-i18n="keys.vocal">伴唱</em></b> <b class="k"><span>G</span><em data-i18n="keys.mic">跟唱</em></b> <b class="k"><span>Y</span><em data-i18n="keys.cover">翻唱</em></b> <b class="k"><span>L</span><em data-i18n="keys.passthrough">穿透</em></b> <b class="k"><span>O</span><em data-i18n="keys.loadVrm">载入VRM</em></b> <b class="k"><span>H</span><em data-i18n="keys.hud">HUD</em></b> <b class="k"><span>S</span><em data-i18n="keys.picker">选曲</em></b>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

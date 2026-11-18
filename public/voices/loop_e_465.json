@@ -1,0 +1,12 @@
+{
+ "source": "coverfull.wav",
+ "rootHz": 466.97,
+ "lengthSec": 0.3191,
+ "sampleRate": 44100,
+ "drift": 0.002,
+ "spreadCents": 20.3,
+ "swingCents": 28.0,
+ "periods": 149,
+ "startSec": 190.49,
+ "vowel": "e"
+}

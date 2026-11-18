@@ -1,0 +1,1040 @@
+:root {
+  --ink: #e9e6f2;
+  --muted: #9d97b3;
+  --accent: #ff8fb1;
+  --panel: rgba(18, 16, 26, 0.72);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  color: var(--ink);
+  user-select: none;
+  cursor: default;
+}
+
+/* 截图验证时用深色底，否则透明窗口截出来看不见轮廓 */
+body.shot-mode {
+  background: #23212e;
+}
+
+#stage {
+  position: absolute;
+  inset: 0;
+}
+
+#stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hud {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 10px 12px;
+  min-width: 190px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  line-height: 1.65;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  /* 以前是 pre（不换行），行一长就伸出窗口、被右上角的混音条盖住（用户 2026-11-16 报的）。
+     改成换行，并在混音条显示时把宽度让出来。 */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: calc(100% - 24px);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+/* 混音条（右上角，~200px 宽）显示时，HUD 不许伸到它下面去 */
+body:has(.mixer.on) .hud {
+  max-width: calc(100% - 236px);
+}
+
+.hud.on {
+  opacity: 1;
+}
+
+.hud b {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.lyric {
+  position: absolute;
+  left: 50%;
+  bottom: 92px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 92%;
+  padding: 9px 18px;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #fff;
+  /* 背景是透明桌宠，字幕必须自带底板，否则压在浅色衣物上完全看不清 */
+  background: rgba(12, 9, 20, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+  white-space: pre-wrap;
+}
+
+.lyric.on {
+  opacity: 1;
+}
+
+.lyric .current {
+  display: block;
+}
+
+/*
+ * 逐字高亮：用 background-clip: text 做一次「已唱/未唱」的分界扫过。
+ * 不逐字拆 span —— 中日文的标点、假名拆开会断行错乱，而且每帧重建 DOM 太贵。
+ * --p 是已唱比例 0..1，由 VisemePlayer 按 mora 进度算出来。
+ */
+.lyric .sweep {
+  background-image: linear-gradient(
+    90deg,
+    #ffe6a3 0%,
+    #ffe6a3 calc(var(--p, 0) * 100%),
+    rgba(255, 255, 255, 0.62) calc(var(--p, 0) * 100%),
+    rgba(255, 255, 255, 0.62) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* 文字透明后阴影会变成一层糊影，交给底板保证对比度 */
+  text-shadow: none;
+}
+
+.lyric .next {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+.banner {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%) translateY(8px);
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+  /*
+   * 2026-11-18 界面复核：它和左下角键位提示、底部进度条在同一条带子里（480×680 时
+   * 提示占 y605-674、进度条 603-628、提示条 595-626），原来没有 z-index，谁后画谁盖——
+   * 结果「已载入 saki.vrm」被键位提示压掉半行。提成一层，临时提示永远读得到。
+   */
+  z-index: 5;
+}
+
+.banner.on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/*
+ * 她说的一句话（换歌时的「这首什么风格、怎么唱」）。
+ *
+ * 位置在**头顶上方**：字幕（bottom 92px）、提示（56px）、进度条和混音条都在下面，
+ * 换歌时那几条全都在，气泡再挤下去就读不了了。
+ * 用浅色底 + 深色字，和下面偏暗的字幕/面板区分开：「她在说话」而不是「字幕」。
+ */
+.speech {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  max-width: 80%;
+  padding: 10px 15px;
+  border-radius: 15px 15px 15px 5px;
+  background: rgba(255, 249, 241, 0.95);
+  color: #2a2233;
+  font-size: 13px;
+  line-height: 1.6;
+  letter-spacing: 0.2px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.32);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  white-space: pre-wrap;
+  /*
+   * 2026-11-18 界面复核：原来是 9，比选曲/导入面板都高，气泡会盖住面板里的曲目行
+   * （截图里第 3 行往下全被挡住）。气泡只是看的，面板要能点，所以压到面板下面。
+   */
+  z-index: 3;
+}
+
+.speech.on {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 小尾巴：朝下指着她（气泡是居中的，尾巴也居中） */
+.speech::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  border-right: 1px solid rgba(255, 255, 255, 0.75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.75);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.drop-hint {
+  position: absolute;
+  inset: 16px;
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--accent);
+  border-radius: 16px;
+  background: rgba(255, 143, 177, 0.08);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.drop-hint.on {
+  opacity: 1;
+}
+
+.keys {
+  position: absolute;
+  left: 12px;
+  bottom: 8px;
+  padding: 6px 9px;
+  border-radius: 10px;
+  max-width: calc(100% - 24px);
+  font-size: 10px;
+  /*
+   * 2026-11-18 用户报「最下面的按钮提示在浅色背景下不好分辨」：
+   * 原来只用 `--muted`（灰紫 #9d97b3）直接压在桌面上，浅壁纸下几乎消失。
+   * 这条提示压的是**桌面**，没有任何面板托着，所以给它自己垫一层和字幕同款的
+   * 半透明深底 + 模糊，文字提亮到近白，再补一层暗描边：浅壁纸、深壁纸都读得出来。
+   */
+  background: rgba(12, 9, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+  color: #ece7f6;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+
+body.shot-mode .keys {
+  opacity: 0;
+}
+
+body.show-keys .keys {
+  opacity: 0.94;
+}
+
+/*
+ * 键位提示铺开时占左下四行（y 605-674），正好压在进度条（y 603-628）上面：
+ * 滑杆被整个盖住，拖不动也看不见。2026-11-18 界面复核发现，让进度条让位——
+ * 看键位是几秒钟的事，按 H 收起就回来了。
+ */
+body.show-keys .seek {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 底部提示条（载入完成 / BPM / 报错）只活 1-4 秒，压在键位提示上会挡掉半行键名。
+   让它赢，键位提示在它出现期间淡出。 */
+body:has(.banner.on) .keys {
+  opacity: 0;
+}
+
+/* 多语言：动作名用 <em> 包着，去掉默认斜体。
+   nowrap：中文可以在任意字之间断行，「姿势编辑」曾被拆成「姿势编」+「辑」。 */
+.keys em {
+  font-style: normal;
+  white-space: nowrap;
+}
+
+/* 每个「键 + 动作名」是一个整体（`<b class="k">`）：不然换行会把「空格」和「节拍」
+   拆到两行去。b 默认加粗，这里改回常规字重。 */
+.keys .k {
+  display: inline-block;
+  margin: 1px 4px 1px 0;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.keys span {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 4px;
+  /* 底色比原来亮一档：深底上要能看出「这是个键」 */
+  background: rgba(255, 255, 255, 0.17);
+  color: #fff;
+  font-size: 9px;
+  margin-right: 3px;
+}
+
+/*
+ * 混音条（C1）。跟着 HUD 一起显示，不常驻——桌宠是透明浮窗，常驻控件会一直压在桌面上。
+ * 显示时 pointer-events 必须打开：主进程只在指针压到「角色或这个面板」上时才放行点击。
+ */
+.mixer {
+  position: absolute;
+  /* 右上角：左下角是按键提示，正下方是字幕和横幅，只有这块是空的。
+     top 让开相机按钮（它在 top:10 / right:10），否则混音条会盖住它。 */
+  top: 42px;
+  right: 12px;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  /* 比 HUD 更实一点：它常常压在角色身上，太透会看不清数值 */
+  background: rgba(18, 16, 26, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  font-size: 10px;
+  color: var(--muted);
+  pointer-events: auto;
+}
+
+.mixer.on {
+  display: flex;
+}
+
+.mix-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mix-row.off {
+  opacity: 0.35;
+}
+
+.mix-tag {
+  width: 22px;
+  letter-spacing: 0.04em;
+}
+
+.mix-slider {
+  width: 96px;
+  height: 14px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mix-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.mix-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 11px;
+  height: 11px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+}
+
+.mix-slider:disabled {
+  cursor: default;
+}
+
+.mix-slider:disabled::-webkit-slider-thumb {
+  background: var(--muted);
+}
+
+.mix-val {
+  width: 24px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* 咬字方式：一个能点的胶囊（自动 → あ → ら → 关），比 URL 参数好用 */
+.att-btn {
+  flex: 1;
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.att-btn:hover {
+  background: rgba(255, 143, 177, 0.2);
+}
+
+/*
+ * 导入面板（B1）。放正中间：导入期间角色本来也没在表演，
+ * 而进度和报错需要一眼能看到。显示时必须可点（重试 / 取消）。
+ */
+.import {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  width: min(330px, 88%);
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(16, 14, 24, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  font-size: 11px;
+  pointer-events: auto;
+}
+
+.import.on {
+  display: flex;
+}
+
+.import-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.import-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.import-bpm {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.import-bpm:empty {
+  display: none;
+}
+
+.import-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.import-source {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.import-source-tag {
+  flex: none;
+  color: var(--muted);
+}
+
+.import-lyrics {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+/* 没选歌词时标红：这是必填项，缺了流水线第四步才会报错 */
+.import-lyrics.warn {
+  color: #ff8c8c;
+}
+
+.import-candidates {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 148px;
+  overflow: auto;
+}
+
+.import-cand {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.import-cand:hover {
+  background: rgba(255, 143, 177, 0.18);
+}
+
+.cand-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cand-meta {
+  flex: none;
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.import-cand-hint {
+  padding: 4px 2px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.import-cand-hint.error {
+  color: #ff8c8c;
+}
+
+.import-row {
+  display: grid;
+  grid-template-columns: 14px 62px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.import-row .import-name {
+  font-variant-numeric: tabular-nums;
+}
+
+.import-row.done {
+  color: var(--ink);
+}
+
+.import-row.done .import-icon {
+  color: #7bd88f;
+}
+
+.import-row.running {
+  color: #ffe6a3;
+}
+
+.import-row.running .import-icon {
+  animation: import-pulse 1s ease-in-out infinite;
+}
+
+.import-row.failed {
+  color: #ff8c8c;
+}
+
+.import-time {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+@keyframes import-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.import-error {
+  display: none;
+  max-height: 120px;
+  overflow: auto;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 108, 108, 0.1);
+  border: 1px solid rgba(255, 108, 108, 0.28);
+  color: #ffb4b4;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+.import-error.on {
+  display: block;
+}
+
+.import-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.import-btn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 7px;
+  background: var(--accent);
+  color: #2a1120;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.import-btn.ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink);
+  font-weight: 400;
+}
+
+.import-btn:hover {
+  filter: brightness(1.1);
+}
+
+.import-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * 选曲面板（B4）。和导入面板同一个视觉语言，但位置略低，
+ * 免得和「导入」同时打开时完全叠在一起。
+ */
+.packs {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  width: min(300px, 86%);
+  max-height: 70%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(16, 14, 24, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  font-size: 11px;
+  pointer-events: auto;
+}
+
+.packs.on {
+  display: flex;
+}
+
+/*
+ * 模态面板（选曲 / 导入）统一压在最上面：气泡是 z 3、底部提示条是 z 5，
+ * 面板要能读、要能点，必须比它们高。2026-11-18 界面复核时气泡盖住了曲目行。
+ */
+.import,
+.packs {
+  z-index: 10;
+}
+
+.packs-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.packs-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.packs-hint {
+  flex: none;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.pack-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: auto;
+}
+
+/* 一行 = 「可点的曲包块」+ 右侧删除。删除按钮在外面而不是嵌在按钮里：
+   `<button>` 不能包 `<button>`，而且点击穿透的命中判断也简单。 */
+.pack-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.pack-row:hover {
+  background: rgba(255, 143, 177, 0.18);
+}
+
+.pack-row.current {
+  background: rgba(255, 143, 177, 0.22);
+}
+
+.pack-pick {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0; /* 不加这条，.pack-name 的省略号不生效 */
+  padding: 6px 9px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* 缩略图：34 px 见方。没有图就退成「首字 + 按 id 定色的方块」，
+   同一首歌永远是同一个颜色，列表顺序变了也不变。 */
+.pack-thumb {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pack-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pack-thumb.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--h, 330) 48% 42%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+.pack-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* 改名：和删除同一套手感（平时很淡，hover 才亮） */
+.pack-ren {
+  flex: none;
+  margin: 4px 0;
+  padding: 0 6px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.pack-ren:hover {
+  background: rgba(140, 190, 255, 0.35);
+  color: #fff;
+}
+
+.pack-edit {
+  width: 100%;
+  padding: 2px 5px;
+  border: 1px solid rgba(140, 190, 255, 0.65);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--ink);
+  font-size: 11px;
+  font-family: inherit;
+  outline: none;
+}
+
+/* 删除：平时很淡，第一下点完变成「删除？」（armed），4 秒没下文自动收回 */
+.pack-del {
+  flex: none;
+  margin: 4px 4px 4px 0;
+  padding: 0 7px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.pack-del:hover {
+  background: rgba(255, 90, 120, 0.35);
+  color: #fff;
+}
+
+.pack-del.armed {
+  background: rgba(255, 90, 120, 0.55);
+  color: #fff;
+}
+
+.pack-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pack-meta {
+  color: var(--muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pack-empty {
+  padding: 6px 2px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* 曲目进度条：底部居中，和 HUD 一起显示。窗口点击穿透，所以它必须能被
+   main.ts 的 overUi() 命中才拖得动。 */
+.seek {
+  position: absolute;
+  left: 50%;
+  bottom: 54px;
+  transform: translateX(-50%);
+  display: none;
+  align-items: center;
+  gap: 8px;
+  width: min(460px, 88%);
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(16, 14, 24, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  font-size: 10px;
+  color: var(--muted);
+  pointer-events: auto;
+}
+
+.seek.on {
+  display: flex;
+}
+
+.seek-time {
+  flex: none;
+  width: 34px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.seek-range {
+  flex: 1;
+  height: 14px;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.seek-range::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.seek-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* 机位切换按钮：右上角小胶囊，平时半透明，鼠标移上去才实。
+   窗口默认点击穿透，所以它必须能被 main.ts 的 overUi() 命中才点得动。 */
+.cam-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+  padding: 4px 10px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.cam-btn:hover {
+  opacity: 1;
+}
+
+.cam-btn[data-preset="over"] {
+  color: var(--accent);
+  border-color: rgba(255, 143, 177, 0.5);
+}
+
+/* 镜头微调面板：和选曲面板同一套观感，只是窄一点、贴右下 */
+.cam {
+  position: absolute;
+  right: 10px;
+  top: 44px;
+  z-index: 7;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  width: min(248px, 76%);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(16, 14, 24, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.cam.on {
+  display: flex;
+}
+
+.cam-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.cam-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cam-hint {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.cam-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cam-tag {
+  flex: none;
+  width: 30px;
+  color: var(--muted);
+}
+
+.cam-slider {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.cam-val {
+  flex: none;
+  width: 46px;
+  text-align: right;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cam-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.cam-btn2 {
+  flex: 1;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.cam-btn2:hover {
+  background: rgba(255, 143, 177, 0.3);
+}
+
+.cam-btn2.ghost {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+}
+
+body.shot-mode .cam-btn {
+  display: none;
+}

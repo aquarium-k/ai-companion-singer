@@ -2731,27 +2731,27 @@ SVC 参考去换全局那 6 段，或者 PSOLA 抽），**不是「从 cover 里
 
 ### 2026-11-15 晚：动作数据打通（BVH→VRM）与程序化过门
 
-**阶段 0**：	ools/bvh_to_clip.mjs 把真实 BVH（freewrl 的 walk.bvh，69 帧 60fps）
+**阶段 0**：`tools/bvh_to_clip.mjs` 把真实 BVH（freewrl 的 walk.bvh，69 帧 60fps）
 转成 src/actions/gen/walk.ts（gen.walk clip，1.13s 循环）。链路：
 按空白切词解析 → 关节名映射（CMU/Mixamo）→ 每帧局部四元数 → 静止朝向对齐
 （q_vrm = A·q_bvh·A⁻¹，A 由两边 rest 方向最短弧给出）→ XYZ 欧拉 → 生成 TS 模块。
 
-**坑一（手臂拧到背后）**：rmRig 的 VRM_BASE_POSE 会给上臂加 −1.28 rad「自然下垂」，
+**坑一（手臂拧到背后）**：`vrmRig` 的 VRM_BASE_POSE 会给上臂加 −1.28 rad「自然下垂」，
 而 BVH 的动作本身已经含了那 90°。两层相加 → 左臂 Z 从 −93° 变成 −160°，手臂朝上后方。
 生成时把 BASE_POSE 从手臂骨骼扣掉就对了（--no-base-pose 可关）。
 
-**坑二（占位角色验证会误导）**：程序化占位角色没有 asePose、rest 是「手臂下垂」，
+**坑二（占位角色验证会误导）**：程序化占位角色没有 `basePose`、rest 是「手臂下垂」，
 而 VRM 的 rest 是 T-pose。同一份 clip 在两个 rig 上表现不同——
 所以重定向必须**在真实 VRM 上验收**（?model=..%2Fmodels%2Ftext.vrm）。
 顺带给 PrimitiveRig 补了 getBoneWorldQuaternion（__pet.restQuats() 靠它导出静息朝向）。
 
-**阶段 1**：src/actions/inbetween.ts 的 uildTransition()——两端骨骼并集 + inOut 缓动 +
+**阶段 1**：src/actions/inbetween.ts 的 `buildTransition()——两端骨骼并集 + inOut 缓动 +
 上半身/手臂的**预备动作**（反向摆 8%，腿不做），髋位移线性插值。
 应用内验证：__pet.inbetween('idle.base','arm.up.full.L',0.7) → 左上臂 Z −46° → 82.5° → 回落，
 clips() 里能看到 gen.transition。
 
 **调试钩子新增**：__pet.clips()（正在跑的动作）、__pet.restQuats()（静息世界四元数）、
-__pet.inbetween()；ire() 现在返回播放结果（started/restarted/blocked/missing）。
+__pet.inbetween()；`fire()` 现在返回播放结果（started/restarted/blocked/missing）。
 
 ### 2026-11-17 晚：和声循环库重造（SVC 直出，替掉 PSOLA 链）
 

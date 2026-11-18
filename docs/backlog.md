@@ -1,6 +1,7 @@
 # 项目状态与待做清单
 
-> **状态时间：2026-11-18 傍晚**（默认界面收到「只有她」、打包出安装包、签名链路验证；下一步见二、A 的顺序）
+> **状态时间：2026-11-18 深夜**（**v0.0.1 开发预览已发 GitHub**：仓库 + Release 都在线；
+> 下一步见二、A 第 1、2 条 —— 「能唱」还差一个演示曲目和一套干净的和声采样）
 > **怎么跑**：日常 `pnpm dev`（渲染层热更新，最快）；想用构建产物就双击 `run.bat`
 > （会按需构建，构建只留一行日志）。改了主进程（`electron/*.cjs`）必须**完全退出**再开。
 > **文档地图**：本文件 = 状态 / 待做 / 关键决策；`docs/history.md` = 细项记录与时间线
@@ -35,7 +36,7 @@
 | 播放/表演 | ✅ | 分轨音量、逐字高亮、能量驱动口型、进度条；**镜头可调**（右键菜单「镜头」：环绕/高度/距离/注视，会记住） |
 | 灯光 | ⛔ 已回退 | 做过「按情绪换色温/曝光」+ 三个预设 + 背后柔光板，用户实际判断是「像是人物在变色」「感觉好奇怪」——透明窗口里没东西接光（2026-11-17 全部回退：删掉 `scene/lighting.ts`、右键「灯光」、设置字段、柔光板；`stage.ts` 回到写死的四盏灯）。真舞台方向留在 D 表 |
 | 多语言 | ✅ | 中文 / 日本語 / English：静态界面 + 原生右键菜单 + 她的台词（describeSong）都按语言走；?lang=、右键「语言」可切，记在存档。HUD 诊断行与姿势编辑器仍是中文（见 docs/i18n.md 四） |
-| 外部控制 | ✅ | window.__pet.* 48 个钩子（动作/和声/跟唱/曲目/画面），命令行客户端 	ools/petctl.mjs；接口契约见 docs/agent-control.md |
+| 外部控制 | ✅ | window.__pet.* 48 个钩子（动作/和声/跟唱/曲目/画面），命令行客户端 `tools/petctl.mjs`；接口契约见 docs/agent-control.md |
 | 说话气泡 | ✅ | 换歌时她说一句「这首听来是什么风格、推荐怎么唱」（`ui/speech.ts` + `songpack/mood.ts` 的 `describeSong`）。气泡在**头顶上方**，不占下面的字幕/进度条位置；`pointer-events:none` 不影响点击穿透。右键「这首歌怎么唱」可再说一遍 |
 | 伴奏伴唱 | ✅ | `V` 关人声；`Y` 原唱 ↔ **她的翻唱（整首 230 s，已按音符修音）** |
 | 和声 | ✅ | 谱面（半音 + 节拍锁）、**逐字换元音（あ/え）**、**48 段库（あ 24 段 SVC 直出 1.9 s + え 24 段）**、人声门控、咬字 あ/ら/は、参数预设可回退 |
@@ -45,12 +46,15 @@
 | 曲包级音色 | ✅ 机制 | `pack.json` 的 `assets.voices` / `assets.attackBank`，换曲包串行替换（目前没有曲包真带自己的采样，原因见二、C） |
 | 设置持久化 | ✅ | 曲包/机位/音量/混音/和声模式/音色预设/HUD，重开全恢复 |
 | 打包 | ✅ | `electron-builder` 白名单打包：**免安装目录 264.7 MB**（exe 180 MB + app.asar 21 MB + 自带 VRM 14 MB），只保留中/日/英三套 Electron 语言包；exe 已带自己的图标与版本号；NSIS 安装包 89.6 MB。**打包版没有导入组件**（要 Python + 3 GB 依赖）：`import:start` 直接返回一句人话、选曲面板空状态也换了文案，不再抛 `ENOTDIR` |
+| 发布（v0.0.1） | ✅ | **GitHub 开发预览**：仓库 <https://github.com/aquarium-k/ai-companion-singer>（public，373 文件 / 21.8 MB）+ Release <https://github.com/aquarium-k/ai-companion-singer/releases/tag/v0.0.1>（`ai-companion-singer-0.0.1-setup.exe` 89.6 MB + `SHA256SUMS.txt`）。`.gitignore` 挡住 `data/`、`shots/`、`songpacks/`、`checkpoints/`、`text.vrm` 等 5 GB 内容；GitHub 算出的资产 digest = 本地 SHA256。推送走 SSH/443（本机 `github.com` DNS 被污染，见 `docs/release.md` 十） |
 | 界面（浅色桌面可读性） | ✅ | 左下键位提示原来直接压在桌面上（灰紫 #9d97b3），浅壁纸下看不清 → 改成和字幕同款的半透明深底 + 文字提亮 + 暗描边；顺手修了「提示条被键位提示压住」「说话气泡盖住选曲面板」「换行把『空格/节拍』拆两行」 |
 | 第一眼（默认界面） | ✅ | **HUD + 混音条默认关闭**（2026-11-18 用户决定）：第一次打开只有她，按 `H` 才出面板（HUD + 混音条 + 键位提示一起），开关状态会记住。`?hud=1` / `?nohud` 可强制。玩家说明见 `docs/manual.md` |
 | 代码签名 | 🟡 | 链路通了（自签实测 exe / 安装包 / 卸载器都签上），**缺一张 CA 证书**；没有签名的期间给 `release/SHA256SUMS.txt` + 说明。见 `docs/signing.md`、B 表 14 |
 
 ### 已知边界（不是 bug，或者已知做不到）
 
+- **发出去的是「开发预览」**：不带曲目、安装包里没有导入组件，所以新用户装上之后**唱不了**
+  （能站、能走、能挥手、能说话）。这不是 bug，是版权 + 体积的取舍；后果和三条出路见二、A 第 1 条。
 - 歌词行首误差约 **1 秒**（少数 1–2 秒）；重复段用均分兜底。
 - 和声**跟谱面，不跟你跑调**（刻意如此，见三）。
 - 和声采样现在是 **48 段**：あ 24 段（210–850 Hz，**每档都用 SVC 在目标音高上直接生成**，
@@ -73,6 +77,8 @@
 
 | # | 事项 | 成本 | 怎么算做完 |
 |---|---|---|---|
+| **0** | **让新用户「能唱」**（v0.2 的门槛） | 你 1 小时 + 我 1 天 | 现在装完只能玩动作（见一、已知边界）。两条一起做才算完：① **干净的和声库**——你录 `あ` / `え` 各 20 秒持续音（安静房间、手机录也行），我用 `tools/rebake_loops.py` 那条流水线重烤 48 段，不再用商业曲目的人声（顺便可能比现在更好听）；② **一个免版权的演示曲包**——你挑一首童謡/PD 曲子唱 30–60 s，我做成曲包随包发（无版权风险）。做完这一条，B 站视频才有东西可录 |
+| **0b** | **B 站演示视频** | 你定 | 有曲目之后录一段：跟唱判定 + 和声 + 走路 + 换语言。投稿时把 GitHub / Release 链接放简介 |
 | 1 | **动作整体复核** | 0.5 天 | **机器复核已跑（2026-11-16 晚，19 条）**：手/肘不穿躯干、腿不交叉。`pose.cheer` 的下蹲穿地已修（−3.3 → −1.6 cm）；剩下的「落地后起身右脚滑 11 cm」是 clip 自己把脚挪了（关掉脚锁量，动画本身就在挪），要改得动 `jump.land` 的姿势。明细见 `docs/motion.md` 九。人工复核（膝角、重心）仍待做 |
 | 2 | **拨头发的手势** | 1 天 | 掌心朝向跟轨迹切线、腕子外翻、手指不穿脸。做法见 `history.md`「世界坐标手臂动画」末段 |
 | 3 | ~~**PSOLA 保共振峰变调**~~ | — | **已完成（2026-11-15）**：TD-PSOLA 离线扩库，六段 → **24 段（210–850 Hz，任意目标离最近采样 ≤1.2 个半音）**；800 Hz 处共振峰位移从 **+5.65 半音** 降到 **−0.05**。顺带修掉「高音区和声整个哑掉」（权重下溢）。`?loops=legacy` 可 A/B |
@@ -91,16 +97,17 @@
 
 | # | 事项 | 说明 |
 |---|---|---|
-| 9 | **版权清理** | 曲包里的歌 / 参考人声 / VRM 都要可分发；`shots/` 下大量实验素材不能进安装包 |
-| 10 | ~~**VRM 授权**~~ | **已解决（2026-11-18）**：用户新导出 `models/saki.vrm`（VRoid Studio 2.16 / VRM 1.0），meta 是最宽松的一档：`avatarPermission: everyone`、`commercialUsage: corporation`、`allowRedistribution: true`、`modification: allowModificationRedistribution`、`creditNotation: unnecessary`。可随安装包分发。旧的 `text.vrm`（非商用 + 仅作者本人 + 必须署名）**不进包**，只留在仓库本地开发 |
-| 11 | **`electron-builder` 打包** | **基本完成（2026-11-18）**：`--dir` 产物 **264.7 MB**（exe 180 MB / app.asar 21 MB / `resources/models/saki.vrm` 14 MB），`electronLanguages` 只留三套语言，exe 已用 rcedit 写入图标 + `ProductName 伴唱桌宠` / `FileVersion 0.0.1` / `CompanyName`。打包版实跑：模型从 `resources/models` 载入（`角色 vrm`）、48 段循环 + 42 段起音、曲包目录在 userData、`401` 无异常。**剩下**：① NSIS 安装包（本轮出，见 `docs/release.md` 七）；② 没有代码签名证书，SmartScreen 会报「未知发布者」；③ Python 导入链的组件分发方案（见 `docs/release.md` 三） |
+| 9 | **版权清理** | **一半（2026-11-18）**：曲包 / `shots/` / 参考人声都不进仓库和安装包了（`.gitignore` + 白名单），VRM 换成可分发的那份。**还剩**：和声 / 起音采样是从商业曲目（白花）人声经 SVC 做的，现在**随安装包和仓库一起分发**，README 与 Release 里写的是「仅供个人学习研究」。要彻底干净得做二、A 第 0 条的重烤 |
+| 10 | ~~**VRM 授权**~~ | **已解决（2026-11-18）**：用户新导出 `models/saki.vrm`（VRoid Studio 2.16 / VRM 1.0），meta 是最宽松的一档：`avatarPermission: everyone`、`commercialUsage: corporation`、`allowRedistribution: true`、`modification: allowModificationRedistribution`、`creditNotation: unnecessary`。可随安装包分发。旧的 `text.vrm`（非商用 + 仅作者本人 + 必须署名）**不进包、不进仓库**，只留本地开发 |
+| 11 | ~~**`electron-builder` 打包**~~ | **完成（2026-11-18）**：`--dir` **264.7 MB**、NSIS 安装包 **89.6 MB**，exe 有图标和版本号，素材白名单实测干净。打包版实跑：`角色 vrm`、48 段循环 + 42 段起音、曲包目录在 userData、无异常。**剩下**：代码签名（14）和导入组件分发（见 `docs/release.md` 三） |
 | 12 | ~~**`dist/songpacks` 去重**~~ | **已完成（2026-11-17 夜）**：`vite.config.ts` 关掉 `copyPublicDir`，`read-asset` 改成先读 `public/` 再退回 `dist/`。dist **81.7 → 5.2 MB**；构建产物只剩 JS/CSS。实测构建版启动仍能载入 48 段采样 + 曲包 f0 |
 | 13 | **依赖体积治理** | 见 11；如果确定不做云端 LLM，可以砍掉一部分 |
 | 14 | **代码签名** | **链路已通，缺证书**（2026-11-18 调研 + 自签实测）：官方规则（[微软文档](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options)）——**EV 自 2024 起不再免 SmartScreen**，OV/EV/Azure 都靠「发布者+文件」攒声誉；**Azure Artifact Signing 个人仅美加、组织仅美/加/欧/英，中国大陆用不了**；Store 的 MSIX 由微软免费重签（零弹窗，但要过审核）；**开源项目可走 SignPath Foundation 免费签（OV 级）**。自签已把 exe / 安装包 / 卸载器签通（换 CA 证书即 `Valid`）。没有证书期间：`release/SHA256SUMS.txt` + 说明书说明。细节 `docs/signing.md` |
-| 15 | **GitHub 发布（开发预览）** | **已发布（2026-11-18 晚）**：<https://github.com/aquarium-k/ai-companion-singer>（public，372 文件 / 21.8 MB）+
+| 15 | ~~**GitHub 发布（开发预览）**~~ | **已发布（2026-11-18 晚）**：<https://github.com/aquarium-k/ai-companion-singer>（public，**373 文件 / 21.8 MB**，两个 commit）+
       <https://github.com/aquarium-k/ai-companion-singer/releases/tag/v0.0.1>（`ai-companion-singer-0.0.1-setup.exe` 89.6 MB + `SHA256SUMS.txt`，资产 digest = 本地哈希）。
       `.gitignore` 挡住了 `data/`、`shots/`、`songpacks/`、`checkpoints/`、`text.vrm` 等 5 GB 内容。
-      网络踩坑与推送方式见 `docs/release.md` 十（`github.com` DNS 污染 → 走 SSH/443 + `scripts/push.mjs`）。**开放问题**：仓库还没放 LICENSE（默认保留所有权利） |
+      网络踩坑与推送方式见 `docs/release.md` 十（`github.com` DNS 污染 → 走 SSH/443 + `node scripts/push.mjs`） |
+| 16 | **LICENSE** | 仓库现在**没有 LICENSE**（默认「保留所有权利」）。要决定：开源就加 MIT / Apache-2.0；不开源就在 README 里写明「代码保留所有权利，仅可阅读」。顺带：若走开源，可以申请 [SignPath Foundation](https://signpath.io) 的免费 OV 级签名（见 `docs/signing.md`） |
 
 ### C. 已决定不做（留档，免得再讨论一遍）
 
@@ -128,6 +135,9 @@
 
 | 做法 | 一句话理由 | 细节 |
 |---|---|---|
+| **v0.1 发「开发预览」而不是完整产品** | 曲目版权拿不干净、导入要 3 GB 依赖、签名没证书 —— 这三件都不是几天能解决的。先把「能跑、能看、代码在这儿」发出去，比憋一个完整版更实际；代价是新用户装上**唱不了**，所以 README / Release 说明 / 说明书三处都写明了 | `docs/release-notes-0.0.1.md`、`docs/manual.md` |
+| **发布通道 = GitHub（SSH/443）而不是网盘** | 源码 + 二进制都要发，GitHub Releases 免费、有平台信任、自带源码 zip；本机 `github.com` DNS 被污染，所以 origin 走 `ssh.github.com:443`，推送用 `node scripts/push.mjs` | `docs/release.md` 十 |
+| **不签名的取舍** | EV 自 2024 起不再免 SmartScreen，Azure Artifact Signing 大陆用不了，证书一年 $150 起。v0.1 用 `SHA256SUMS.txt` + 说明替代，等有真实用户再买 OV | `docs/signing.md` |
 | 和声跟谱面，不跟麦克风实测音高 | 跟你唱会变成二重奏打架；接谱面后延迟只剩「一帧 + 30 ms 滑音」≈ 20 ms，也没有回声风险 | `history.md` C2/C4 |
 | 循环混合宽度 **sigma 0.6**（旧 1.2） | 库里每档都是 SVC 直出（同一副嗓子、不同目标音高），混两族 = 同一个人的两份**共振峰不同**的副本，谐波互相错开：554 Hz 时 516.9 Hz 那档被拉高 +2.4 半音，占 31%，它的 H5 在 3.32 kHz、主副本在 2.77 kHz。收到 0.6 后远处家族只占 4%。`?sigma=1.2` 回旧宽度 |
 | 六段循环 + 高斯权重混合 | 采样靠播放速率变调，连带共振峰和颤音率一起走。隔 12 个半音的两段就是「同一个音高两个人在唱」 | C4 |
@@ -207,3 +217,5 @@
 - **11-18 傍晚（默认界面 + 代码签名）**：① **HUD + 混音条默认关闭**（用户决定）：第一次打开只有她本人，按 `H` 出 HUD + 混音条 + 键位提示，开关状态记进存档；`?hud=1` / `?nohud` 可强制。新增 **`docs/manual.md`**（玩家说明书：安装、三个鼠标动作、按键表、面板、跟唱怎么用、常见问题、数据位置、版权致谢），README 顶部加了指向。② **代码签名**：用 `New-SelfSignedCertificate` 造了一张测试证书，走 `CSC_LINK` / `CSC_KEY_PASSWORD` 打包 —— exe、安装包、卸载器**都被签上了**（`Get-AuthenticodeSignature` 只报「证书链终止于不受信任的根」，换 CA 证书就是 `Valid`）；验完已删掉证书和产物。新增 **`docs/signing.md`**：不签 / 自签 / OV / EV / Azure Trusted Signing 的价格与适用场景、怎么接、自签实测记录、没有证书期间用 `SHA256SUMS.txt` + 说明兜底（`scripts/package_installer.mjs` 自动生成）。结论：**代码不用改，缺的只是一张证书**。
 
 - **11-18 晚（按 B 路线准备 GitHub 发布）**：用户拍板「直接走 B：开发预览，丢 GitHub」。做的都是**发布物料**，没有动功能代码：① `.gitignore`（以前**根本没有**，直接 `git add .` 会把 5 GB 的 `.pylibs/.svclibs/.tmp/checkpoints/shots/songpacks` 和带本机音乐路径的 `data/` 全推上去）：忽略 `data/`、`public/songpacks/`、`shots/`、`.tmp*/`、`checkpoints/`（956 MB 权重，之前不知道它在这个目录）、`.cache/.pylibs/.svclibs`、`public/voices/_orig*`、`models/text.vrm`（许可不允许分发）。可提交 ≈ 370 文件 / 21.6 MB（其中 `saki.vrm` 14 MB）。② README 重写成「开发预览」：顶部一张「能做什么 / 还不能做什么」对照表 + 截图（`docs/img/`），明确「没有自带曲目、安装包没有导入」，补版权段（VRM 两个模型的许可差别、和声采样的来源与「仅个人学习用」）、「这一版没有做的」「已知问题」两节替换掉 P0 时代的旧文案。③ `docs/release-notes-0.0.1.md`：可直接贴进 GitHub Releases 的中英双语说明（含 SmartScreen 说明、SHA256 核对、已知问题、致谢）。④ `docs/release.md` 新增「九、推到 GitHub」：命令、提交前必查清单、Release 上传做法。本机**没装 git**，所以只写了流程、没有真的 init/commit。
+
+- **11-18 深夜（v0.0.1 真的发出去了）**：用户让我直接做。没有 git/gh、没有管理员权限 → 便携版装到 `.tmp/tools`；`gh` 设备码登录成 `aquarium-k`；`git init` + 372 文件 / 21.8 MB + 人工核对没有敏感目录 → 建 public 仓库。**卡在网络上**：`github.com` DNS 被污染（解析成根 DNS 地址），真实 IP 的 TLS 只有 ~0.1 KB/s，HTTPS push 必超时 → 改走 **SSH over 443**（`ssh.github.com:443`，握手 1.4 秒），`gh auth refresh -s admin:public_key` 补权限后注册密钥，push 成功。发布 `v0.0.1`：GitHub 把中文文件名改成了 `Setup.0.0.1.exe`，删掉重传成 `ai-companion-singer-0.0.1-setup.exe`，`SHA256SUMS.txt` 同步；资产 digest 与本地一致。补 `scripts/push.mjs`（省得记 SSH 参数）和 `docs/release.md` 第十节。**顺带修**：`docs/backlog.md` 和 `docs/history.md` 里有几处早前用 PowerShell here-string 写坏的控制字符（`\t`/`\b`/`\u000b` 把字吃掉了，比如 `` `tools/petctl.mjs` `` 变成 tab + "ools"），已全部修回。仓库和 Release 链接见一、发布那行。

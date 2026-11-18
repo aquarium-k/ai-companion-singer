@@ -671,7 +671,7 @@ const LIP_RELEASE = 0.08
  * 所以**有 mora 就把张口度垫到 0.25**，字与字之间只是半闭，不是闭死；
  * 真正的闭口留给没 mora 的间隙（那时 shape 的 aa 也是 0）。
  */
-const LIP_FLOOR = 0.25
+const LIP_FLOOR = 0.45
 
 export function createLipSyncClip(
   getLevel: () => number,
@@ -703,8 +703,16 @@ export function createLipSyncClip(
         ? { aa: 0.9, oh: 0.28, ee: 0.1 }
         : (VOWEL_SHAPE[vowel] ?? VOWEL_SHAPE[''])
 
-      // 有 mora：至少半张；没 mora：完全跟着包络（间隙要闭嘴，不然像在假唱）
-      const open = vowel === null ? env : Math.max(env, LIP_FLOOR)
+      /*
+       * 张嘴量。
+       *
+       * 原来是有 mora 时 `max(env, 0.25)`——0.25 的「至少半张」其实只有四分之一，
+       * 而 `level()` 在副歌以外的段落（verse）常常只有 0.05–0.2，于是唱的时候嘴
+       * 一直停在 0.22 左右，看起来就是「没有嘴型」（用户 2026-11-18 报的）。
+       * 改成「底量 + 包络」：有 mora 时至少 0.45 张（肉眼能看出嘴形），
+       * 再由包络往上推到全张；没有 mora 仍然只跟包络（间奏要闭嘴）。
+       */
+      const open = vowel === null ? env : LIP_FLOOR + (1 - LIP_FLOOR) * env
 
       const expressions: Partial<Record<ExpressionName, number>> = {}
       for (const key of LIP_KEYS) {

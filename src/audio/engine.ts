@@ -110,8 +110,17 @@ export class AudioEngine {
       sum += v * v
     }
     const rms = Math.sqrt(sum / this.timeData.length)
-    const span = Math.max(1e-4, this.levelHi - this.levelLo)
-    return clamp((rms - this.levelLo) / span, 0, 1)
+    /*
+     * 映射：把「声段 p10」再往下压一半当零点。
+     *
+     * 原来零点就是 p10，于是**副歌以外的段落**（人声在中低电平）算出来几乎恒为 0，
+     * 嘴一直闭着——用户 2026-11-18 报的「放歌没有嘴型」就是这个。实测同一首里
+     * 30 s 处 p50=0.45，90 s 处 p50=0.01，而两处的 vocal 包络 RMS 只差一半。
+     * 零点收到 p10/2 之后，安静段也能落在 0.3–0.8，嘴至少跟着字在动。
+     */
+    const lo = this.levelLo * 0.5
+    const span = Math.max(1e-4, this.levelHi - lo)
+    return clamp((rms - lo) / span, 0, 1)
   }
 
   /**

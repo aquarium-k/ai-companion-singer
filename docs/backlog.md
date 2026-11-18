@@ -52,6 +52,7 @@
 | 发布（v0.0.1） | ✅ | **GitHub 开发预览**：仓库 <https://github.com/aquarium-k/ai-companion-singer>（public，373 文件 / 21.8 MB）+ Release <https://github.com/aquarium-k/ai-companion-singer/releases/tag/v0.0.1>（`ai-companion-singer-0.0.1-setup.exe` 89.6 MB + `SHA256SUMS.txt`）。`.gitignore` 挡住 `data/`、`shots/`、`songpacks/`、`checkpoints/`、`text.vrm` 等 5 GB 内容；GitHub 算出的资产 digest = 本地 SHA256。推送走 SSH/443（本机 `github.com` DNS 被污染，见 `docs/release.md` 十） |
 | 做曲包（v0.0.3） | ✅ | **可选 creator pack**：`ai-companion-singer-creator-pack.zip`（**561 MB**，解压 800 MB）= Python 3.12（35 MB）+ numpy/av/onnxruntime/Pillow/pykakasi + **ctranslate2/faster-whisper**（276 MB）+ UVR MDX-Net 分离模型（28 MB）+ **whisper-small**（461 MB）+ 流水线脚本。放到 `<userData>/creator/` 后按 `I` 就能导入自己的歌，**LRC 和纯文本歌词都支持**（纯文本走 Whisper 对齐，CPU 上 3–6 倍音频时长）；没有它一切照旧（右键「做曲包组件…」解释 + 打开目录）。实测：打包版 + 解压出来的 zip → 30 s 的歌带 LRC 和带 .txt 两种都 `done`、曲包能被选曲面板加载 |
 | 界面（浅色桌面可读性） | ✅ | 左下键位提示原来直接压在桌面上（灰紫 #9d97b3），浅壁纸下看不清 → 改成和字幕同款的半透明深底 + 文字提亮 + 暗描边；顺手修了「提示条被键位提示压住」「说话气泡盖住选曲面板」「换行把『空格/节拍』拆两行」 |
+| 口型（v0.0.4-dev） | ✅ | 用户报「run.bat 放歌没有嘴型」。实测不是渲染问题（钉住 `?lip=0.9` 嘴是明显的椭圆），是**驱动量太小**：`level()` 的零点取整首人声 p10，副歌以外贴 0；有 mora 时又只 `max(env, 0.25)`（张嘴 0.22，肉眼几乎看不出）。零点改成 `p10/2`、张嘴改成 `0.45 + 0.55*env`。复测安静段 p50 从 0.01 → 0.20–0.49，截图可见嘴形 |
 | 第一眼（默认界面） | ✅ | **HUD + 混音条默认关闭**（2026-11-18 用户决定）：第一次打开只有她，按 `H` 才出面板（HUD + 混音条 + 键位提示一起），开关状态会记住。`?hud=1` / `?nohud` 可强制。玩家说明见 `docs/manual.md` |
 | 代码签名 | 🟡 | 链路通了（自签实测 exe / 安装包 / 卸载器都签上），**缺一张 CA 证书**；没有签名的期间给 `release/SHA256SUMS.txt` + 说明。见 `docs/signing.md`、B 表 14 |
 

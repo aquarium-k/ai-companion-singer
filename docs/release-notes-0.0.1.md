@@ -28,14 +28,14 @@
 
 ## 安装
 
-1. 下 `伴唱桌宠 Setup 0.0.1.exe`（89.6 MB），双击安装（可改目录，会建桌面/开始菜单快捷方式）
+1. 下 `ai-companion-singer-0.0.1-setup.exe`（89.6 MB），双击安装（可改目录，会建桌面/开始菜单快捷方式）
 2. SmartScreen 提示时点「更多信息 → 仍要运行」
 3. 第一次打开**只有她本人**，按 `H` 打开 HUD + 混音条 + 键位提示，右键她打开菜单
 
 校验（可选）：
 
 ```powershell
-certutil -hashfile "伴唱桌宠 Setup 0.0.1.exe" SHA256
+certutil -hashfile "ai-companion-singer-0.0.1-setup.exe" SHA256
 # 和 SHA256SUMS.txt 里那行对比
 ```
 

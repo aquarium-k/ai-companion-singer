@@ -97,7 +97,10 @@
 | 12 | ~~**`dist/songpacks` 去重**~~ | **已完成（2026-11-17 夜）**：`vite.config.ts` 关掉 `copyPublicDir`，`read-asset` 改成先读 `public/` 再退回 `dist/`。dist **81.7 → 5.2 MB**；构建产物只剩 JS/CSS。实测构建版启动仍能载入 48 段采样 + 曲包 f0 |
 | 13 | **依赖体积治理** | 见 11；如果确定不做云端 LLM，可以砍掉一部分 |
 | 14 | **代码签名** | **链路已通，缺证书**（2026-11-18 调研 + 自签实测）：官方规则（[微软文档](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options)）——**EV 自 2024 起不再免 SmartScreen**，OV/EV/Azure 都靠「发布者+文件」攒声誉；**Azure Artifact Signing 个人仅美加、组织仅美/加/欧/英，中国大陆用不了**；Store 的 MSIX 由微软免费重签（零弹窗，但要过审核）；**开源项目可走 SignPath Foundation 免费签（OV 级）**。自签已把 exe / 安装包 / 卸载器签通（换 CA 证书即 `Valid`）。没有证书期间：`release/SHA256SUMS.txt` + 说明书说明。细节 `docs/signing.md` |
-| 15 | **GitHub 发布（开发预览）** | **物料已备（2026-11-18 晚）**：`.gitignore`（此前没有！）、README 改写成开发预览（对照表 + 截图 + 版权段）、`docs/release-notes-0.0.1.md`（Release 正文）、`docs/release.md` 九（推送流程 + 提交前必查清单）。**还没做的**：装 git → init/commit/push；发 Release 上传安装包 + SHA256SUMS。**开放问题**：仓库放不放 LICENSE（现在没有 = 默认保留所有权利） |
+| 15 | **GitHub 发布（开发预览）** | **已发布（2026-11-18 晚）**：<https://github.com/aquarium-k/ai-companion-singer>（public，372 文件 / 21.8 MB）+
+      <https://github.com/aquarium-k/ai-companion-singer/releases/tag/v0.0.1>（`ai-companion-singer-0.0.1-setup.exe` 89.6 MB + `SHA256SUMS.txt`，资产 digest = 本地哈希）。
+      `.gitignore` 挡住了 `data/`、`shots/`、`songpacks/`、`checkpoints/`、`text.vrm` 等 5 GB 内容。
+      网络踩坑与推送方式见 `docs/release.md` 十（`github.com` DNS 污染 → 走 SSH/443 + `scripts/push.mjs`）。**开放问题**：仓库还没放 LICENSE（默认保留所有权利） |
 
 ### C. 已决定不做（留档，免得再讨论一遍）
 

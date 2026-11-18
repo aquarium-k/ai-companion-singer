@@ -189,5 +189,30 @@ git push -u origin main
 上传 `release/伴唱桌宠 Setup 0.0.1.exe` 和 `release/SHA256SUMS.txt` →
 正文直接贴 `docs/release-notes-0.0.1.md`。安装包不进 git，只放 Releases。
 
+⚠️ **GitHub 会把中文文件名改掉**：`伴唱桌宠 Setup 0.0.1.exe` 上传后变成
+`Setup.0.0.1.exe`（空格变点、中文没了）。所以发布资产用 ASCII 名
+**`ai-companion-singer-0.0.1-setup.exe`**，`SHA256SUMS.txt` 里也写这个名字
+（2026-11-18 第一次发布时踩到，已改名重传）。
+
 > 想把安装包里的和声采样也一起公开的话，先在 `README.md` 的版权段里说清楚
 > 「仅供个人学习研究」；要正式发布还是得按 `docs/maintenance.md` 用自己录的元音重烤。
+
+## 十、中国大陆的网络问题（2026-11-18 实测）
+
+这台机器到 **`github.com` 的 DNS 被污染**：解析结果是 `20.6.7.17` / `192.5.6.30` 这类
+根 DNS 服务器地址；换成真实 IP（`140.82.112.3` 等）能连上，但 TLS 吞吐只有 **~0.1 KB/s**，
+`git push` 必然超时。`api.github.com` / `uploads.github.com` / `codeload.github.com`
+解析正常、速度也可以，所以 `gh` 的命令都能用，只有「推代码/拉大文件」不行。
+
+**现在的做法**（已经配好，不用重做）：
+
+| 项 | 值 |
+|---|---|
+| remote | `ssh://git@ssh.github.com:443/aquarium-k/ai-companion-singer.git`（GitHub 的 SSH-over-443 入口，域名解析正常，握手 1–2 秒） |
+| 私钥 | `.tmp/ssh/id_ed25519`（在 `.gitignore` 里，不会进仓库）；公钥已用 `gh ssh-key add` 注册 |
+| 推送 | `node scripts/push.mjs`（内部设好 `GIT_SSH_COMMAND`，用 Windows 自带的 OpenSSH） |
+| 撤销密钥 | `gh ssh-key list` → `gh ssh-key delete <id>` |
+
+想换回 HTTPS：先开代理（Clash 之类，默认 `127.0.0.1:7890`），再
+`git remote set-url origin https://github.com/<你>/ai-companion-singer.git`，
+推的时候加 `-c http.proxy=http://127.0.0.1:7890`。

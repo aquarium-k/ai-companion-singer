@@ -2913,3 +2913,19 @@ SVC 只负责把相位重合成干净的一代。实测（352 用 24 步、384 �
   ④ 实测：30 秒的歌、纯 .txt 歌词 → app 里导入 `state=done`；ASR 这一段 **159 秒**
   （约 5 倍实时，small + int8 + CPU），说明书写明「3 分钟的歌 10–20 分钟」。
   ⑤ 发布 v0.0.3（安装包 + 561 MB 组件 + SHA256SUMS），并把组件资产用修正后的 zip 重传了一次。
+
+- **11-18 深夜（D 盘写权限）**：用户反馈「东西下不到 D 盘，显示需要权限」。查下来是**这台机器的
+  `D:\` 根目录 ACL 只给了 `Users` / `Authenticated Users` **ReadAndExecute**（所有者是 SYSTEM，
+  `D:\CloudMusic` 之类个别目录是以前单独放开的），所以任何非管理员进程都没法在 D: 上建文件——
+  不是应用的问题。修法（需要一次 UAC 提权）：
+
+  ```cmd
+  icacls D:\ /grant "hp:(OI)(CI)M"
+  icacls D:\ /grant "Users:(OI)(CI)M"
+  ```
+
+  踩了两个 cmd 引号坑：① `icacls "D:\"` —— icacls 是 C 程序，`\"` 被当成转义引号，参数变成 `D:"`，
+  报「文件名、目录名或卷标语法不正确」（exit 123）；② 提权窗口里看不到输出，所以先把命令写进
+  `.tmp\fix_d_acl3.cmd` 再 `Start-Process cmd /c <file> -Verb RunAs`，并把 whoami/icacls 输出重定向到
+  日志确认真的提权了（`S-1-16-12288` = High Mandatory Level）。修完：根目录和 **所有顶层文件夹**
+  写入测试都通过（`D:\Download`、`D:\Audio` 等原本也被继承成了只读）。
